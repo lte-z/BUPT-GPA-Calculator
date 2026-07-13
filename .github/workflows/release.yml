@@ -23,7 +23,7 @@ jobs:
 
             - name: Restore, build and test
               run: |
-                  dotnet restore BuptGpaCalculator.sln
+                  dotnet restore BuptGpaCalculator.sln --runtime win-x64
                   dotnet build BuptGpaCalculator.sln --configuration Release --no-restore
                   dotnet test BuptGpaCalculator.sln --configuration Release --no-build
 

@@ -24,6 +24,20 @@ public sealed class AcademicScoreImportParserTests
     }
 
     [Fact]
+    public void Parse_WithFullAcademicSystemColumnsAndCarriageReturnLines_ReadsTable()
+    {
+        const string text = "查询条件：开课时间【2042-2043-1】\r序号\t开课学期\t课程编号\t课程名称\t分组名\t成绩\t成绩标识\t学分\t总学时\t绩点\r1\t2042-2043-1\tSYN-2042\t虚构课程甲\t\t95\t\t2.5\t40\t3.95";
+
+        var result = AcademicScoreImportParser.Parse(text);
+
+        var course = Assert.Single(result.Courses);
+        Assert.Empty(result.Issues);
+        Assert.Equal("SYN-2042", course.CourseCode);
+        Assert.Equal(95, course.Score);
+        Assert.Equal(2.5m, course.Credit);
+    }
+
+    [Fact]
     public void Parse_WithInvalidRows_ReturnsOtherCoursesAndRowIssues()
     {
         const string text = """

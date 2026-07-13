@@ -12,7 +12,9 @@ public sealed record CourseRecord
     /// <param name="score">The integer score from 0 through 100.</param>
     /// <param name="credit">The non-negative course credit.</param>
     /// <param name="isIncluded">Whether the course contributes to GPA and GA.</param>
-    public CourseRecord(Guid id, string studentId, AcademicTerm term, string? courseCode, string courseName, int score, decimal credit, bool isIncluded)
+    /// <param name="source">Where the course information came from.</param>
+    /// <param name="sortOrder">The stable order used by the default course list.</param>
+    public CourseRecord(Guid id, string studentId, AcademicTerm term, string? courseCode, string courseName, int score, decimal credit, bool isIncluded, CourseSource source = CourseSource.Manual, int sortOrder = 0)
     {
         if (string.IsNullOrWhiteSpace(studentId))
         {
@@ -44,6 +46,8 @@ public sealed record CourseRecord
         Score = score;
         Credit = credit;
         IsIncluded = isIncluded;
+        Source = source;
+        SortOrder = sortOrder;
     }
 
     /// <summary>Gets the internal course identifier.</summary>
@@ -69,4 +73,10 @@ public sealed record CourseRecord
 
     /// <summary>Gets a value indicating whether this course contributes to GPA and GA.</summary>
     public bool IsIncluded { get; }
+
+    /// <summary>Gets the source shown alongside the course to keep manually entered results identifiable.</summary>
+    public CourseSource Source { get; }
+
+    /// <summary>Gets the stable default order within an academic term.</summary>
+    public int SortOrder { get; }
 }

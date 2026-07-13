@@ -1,153 +1,294 @@
-<Window x:Class="BuptGpaCalculator.App.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="BUPT GPA Calculator" Height="700" Width="1000" MinHeight="620" MinWidth="900"
-        WindowStartupLocation="CenterScreen" Background="{StaticResource WindowBrush}" Closing="Window_Closing">
+<ui:FluentWindow x:Class="BuptGpaCalculator.App.MainWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="BUPT GPA Calculator"
+                 Width="1024"
+                 Height="640"
+                 MinWidth="1024"
+                 MinHeight="640"
+                 FontFamily="Microsoft YaHei UI, Segoe UI Variable Text, Segoe UI"
+                 TextOptions.TextFormattingMode="Ideal"
+                 TextOptions.TextRenderingMode="Auto"
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="Mica"
+                 WindowStartupLocation="CenterScreen"
+                 Closing="Window_Closing">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="32" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="25" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Menu Grid.Row="0" Background="White">
-            <MenuItem Header="档案">
-                <MenuItem Header="新建档案..." Click="NewArchive_Click" />
-                <MenuItem Header="打开档案..." Click="OpenArchive_Click" />
-                <Separator />
-                <MenuItem Header="保存" Click="Save_Click" />
-                <MenuItem Header="另存为..." Click="SaveAs_Click" />
-            </MenuItem>
-            <MenuItem Header="学生">
-                <MenuItem Header="新增学生..." Click="AddStudent_Click" />
-            </MenuItem>
-            <MenuItem Header="帮助">
-                <MenuItem Header="关于" Click="About_Click" />
-            </MenuItem>
-        </Menu>
+        <ui:TitleBar Grid.Row="0" Title="BUPT GPA Calculator" />
 
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="170" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+        <Border Grid.Row="1" Padding="18,10,18,12" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="White" BorderBrush="#E2E6EB" BorderThickness="0,0,1,0">
-                <DockPanel>
-                    <StackPanel DockPanel.Dock="Top" Margin="10,16,10,10">
-                        <TextBlock Text="BUPT GPA" FontSize="18" FontWeight="SemiBold" Foreground="#1D5FA7" />
-                        <TextBlock Text="成绩计算器" Margin="0,2,0,14" Foreground="#697386" />
-                        <TextBlock Text="当前学生" Foreground="#697386" FontSize="12" Margin="4,0,0,4" />
-                        <ComboBox x:Name="StudentComboBox" DisplayMemberPath="DisplayName" SelectionChanged="StudentComboBox_SelectionChanged" />
-                        <Button Content="新增学生" Click="AddStudent_Click" Margin="0,8,0,16" />
-                        <Button x:Name="OverviewNavigationButton" Style="{StaticResource NavigationButton}" Content="成绩概览" Click="OverviewNavigationButton_Click" />
-                        <Button x:Name="CoursesNavigationButton" Style="{StaticResource NavigationButton}" Content="课程记录" Click="CoursesNavigationButton_Click" />
-                        <Button x:Name="RulesNavigationButton" Style="{StaticResource NavigationButton}" Content="计算规则" Click="RulesNavigationButton_Click" />
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:Button x:Name="OverviewNavButton" Content="成绩概览" Appearance="Primary" Click="OverviewNavigationButton_Click" Margin="0,0,6,0" />
+                    <ui:Button x:Name="CoursesNavButton" Content="课程记录" Appearance="Secondary" Click="CoursesNavigationButton_Click" Margin="0,0,6,0" />
+                    <ui:Button x:Name="RulesNavButton" Content="计算规则" Appearance="Secondary" Click="RulesNavigationButton_Click" Margin="0,0,6,0" />
+                    <ui:Button x:Name="HelpNavButton" Content="使用说明" Appearance="Secondary" Click="HelpNavigationButton_Click" />
+                </StackPanel>
+
+                <Border Grid.Column="1" Width="1" Height="24" Background="{DynamicResource TextFillColorTertiaryBrush}" Opacity="0.58" Margin="10,0" VerticalAlignment="Center" />
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ComboBox x:Name="StudentComboBox" Width="210" DisplayMemberPath="DisplayName" SelectionChanged="StudentComboBox_SelectionChanged" />
+                    <ui:Button Content="新增学生" Appearance="Secondary" Click="AddStudent_Click" Margin="8,0,0,0" />
+                    <ui:Button Content="管理" Appearance="Secondary" Click="ManageStudent_Click" Margin="6,0,0,0" />
+                </StackPanel>
+
+                <Border Grid.Column="3" Width="1" Height="24" Background="{DynamicResource TextFillColorTertiaryBrush}" Opacity="0.58" Margin="10,0" VerticalAlignment="Center" />
+
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:Button Content="新建档案" Appearance="Secondary" Click="NewArchive_Click" Margin="0,0,6,0" />
+                    <ui:Button Content="打开" Appearance="Secondary" Click="OpenArchive_Click" Margin="0,0,6,0" />
+                    <ui:Button Content="另存" Appearance="Secondary" Click="SaveAs_Click" Margin="0,0,6,0" />
+                    <ui:Button Content="保存" Appearance="Primary" Click="Save_Click" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="22,18,22,16">
+            <Grid x:Name="WelcomePanel">
+                <Border Style="{StaticResource SoftCard}" Width="430" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="30">
+                    <StackPanel>
+                        <TextBlock x:Name="WelcomeTitleTextBlock" Text="从一个成绩档案开始" FontSize="25" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="WelcomePrimaryTextBlock" Text="档案是独立的单个 .db 文件" TextAlignment="Center" Opacity="0.68" Margin="0,10,0,0" />
+                        <TextBlock x:Name="WelcomeSecondaryTextBlock" Text="程序不会在其他位置写入成绩数据" TextAlignment="Center" Opacity="0.58" Margin="0,3,0,24" />
+                        <ui:Button x:Name="WelcomePrimaryButton" Content="新建成绩档案" Appearance="Primary" Click="WelcomePrimaryButton_Click" HorizontalAlignment="Stretch" Margin="0,0,0,8" />
+                        <ui:Button x:Name="WelcomeSecondaryButton" Content="打开已有档案" Appearance="Secondary" Click="WelcomeSecondaryButton_Click" HorizontalAlignment="Stretch" />
                     </StackPanel>
-                    <TextBlock DockPanel.Dock="Bottom" Text="小Z工作室#2026" Foreground="#8A94A6" FontSize="12" Margin="14" />
-                </DockPanel>
-            </Border>
+                </Border>
+            </Grid>
 
-            <Grid Grid.Column="1" Margin="22">
-                <Grid x:Name="OverviewPanel">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <DockPanel Grid.Row="0" Margin="0,0,0,16">
-                        <StackPanel DockPanel.Dock="Left">
-                            <TextBlock Text="成绩概览" FontSize="24" FontWeight="SemiBold" />
-                            <TextBlock x:Name="OverviewSubtitleTextBlock" Text="打开档案后查看统计结果" Foreground="#697386" Margin="0,4,0,0" />
-                        </StackPanel>
-                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <ComboBox x:Name="OverviewTermComboBox" Width="145" Height="30" Margin="0,0,8,0" SelectionChanged="OverviewScope_Changed" />
-                            <Button Content="保存" Style="{StaticResource AccentButton}" Click="Save_Click" />
-                        </StackPanel>
-                    </DockPanel>
+            <Grid x:Name="OverviewPanel" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-                    <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,18">
-                        <Border Style="{StaticResource CardBorder}" Margin="0,0,10,0">
-                            <StackPanel><TextBlock Text="GPA" Foreground="#697386" /><TextBlock x:Name="GpaTextBlock" Text="—" FontSize="28" FontWeight="SemiBold" Margin="0,6,0,0" /></StackPanel>
-                        </Border>
-                        <Border Style="{StaticResource CardBorder}" Margin="0,0,10,0">
-                            <StackPanel><TextBlock Text="GA" Foreground="#697386" /><TextBlock x:Name="GaTextBlock" Text="—" FontSize="28" FontWeight="SemiBold" Margin="0,6,0,0" /></StackPanel>
-                        </Border>
-                        <Border Style="{StaticResource CardBorder}" Margin="0,0,10,0">
-                            <StackPanel><TextBlock Text="已修总学分" Foreground="#697386" /><TextBlock x:Name="TotalCreditTextBlock" Text="—" FontSize="28" FontWeight="SemiBold" Margin="0,6,0,0" /></StackPanel>
-                        </Border>
-                        <Border Style="{StaticResource CardBorder}">
-                            <StackPanel><TextBlock Text="本学期 GPA" Foreground="#697386" /><TextBlock x:Name="CurrentTermGpaTextBlock" Text="—" FontSize="28" FontWeight="SemiBold" Margin="0,6,0,0" /></StackPanel>
-                        </Border>
-                    </UniformGrid>
-
-                    <Grid Grid.Row="2">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <Border Grid.Column="0" Style="{StaticResource CardBorder}" Margin="0,0,9,0">
-                            <DockPanel><TextBlock DockPanel.Dock="Top" Text="学期 GPA 趋势" FontWeight="SemiBold" Margin="0,0,0,8" /><Canvas x:Name="TrendCanvas" Height="240" Background="#FCFCFD" SizeChanged="ChartCanvas_SizeChanged" /></DockPanel>
-                        </Border>
-                        <Border Grid.Column="1" Style="{StaticResource CardBorder}" Margin="9,0,0,0">
-                            <DockPanel><TextBlock DockPanel.Dock="Top" Text="成绩分布" FontWeight="SemiBold" Margin="0,0,0,8" /><Canvas x:Name="DistributionCanvas" Height="240" Background="#FCFCFD" SizeChanged="ChartCanvas_SizeChanged" /></DockPanel>
-                        </Border>
-                    </Grid>
+                <Grid Grid.Row="0" Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="成绩概览" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock x:Name="OverviewSubtitleTextBlock" Text="打开档案后查看统计结果" Opacity="0.66" Margin="0,3,0,0" />
+                    </StackPanel>
+                    <ComboBox x:Name="OverviewTermComboBox" Grid.Column="1" Width="170" DisplayMemberPath="DisplayName" VerticalAlignment="Center" SelectionChanged="OverviewScope_Changed" />
                 </Grid>
 
-                <Grid x:Name="CoursesPanel" Visibility="Collapsed">
-                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                    <DockPanel Grid.Row="0" Margin="0,0,0,16">
-                        <StackPanel DockPanel.Dock="Left"><TextBlock Text="课程记录" FontSize="24" FontWeight="SemiBold" /><TextBlock Text="直接修改表格内容，保存后写入当前档案。" Foreground="#697386" Margin="0,4,0,0" /></StackPanel>
-                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Content="打开教务系统" Click="OpenAcademicSystem_Click" />
-                            <Button Content="导入教务成绩" Click="ImportCourses_Click" />
-                            <Button Content="新增课程" Style="{StaticResource AccentButton}" Click="AddCourse_Click" />
-                        </StackPanel>
-                    </DockPanel>
-                    <WrapPanel Grid.Row="1" Margin="0,0,0,12">
-                        <TextBox x:Name="SearchTextBox" Width="190" Height="30" Margin="0,0,8,0" VerticalContentAlignment="Center" TextChanged="Filter_Changed" />
-                        <ComboBox x:Name="TermFilterComboBox" Width="150" Height="30" Margin="0,0,8,0" SelectionChanged="Filter_Changed" />
-                        <ComboBox x:Name="IncludedFilterComboBox" Width="110" Height="30" SelectionChanged="Filter_Changed">
-                            <ComboBoxItem Content="全部课程" Tag="all" IsSelected="True" />
-                            <ComboBoxItem Content="仅计入" Tag="included" />
-                            <ComboBoxItem Content="仅不计入" Tag="excluded" />
-                        </ComboBox>
-                        <Button Content="删除所选" Click="DeleteCourse_Click" Margin="8,0,0,0" />
-                    </WrapPanel>
-                    <DataGrid x:Name="CourseDataGrid" Grid.Row="2" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Extended" CellEditEnding="CourseDataGrid_CellEditEnding" RowEditEnding="CourseDataGrid_RowEditEnding" HeadersVisibility="Column" GridLinesVisibility="Horizontal">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="开课学期" Binding="{Binding Term, UpdateSourceTrigger=PropertyChanged}" Width="130" />
-                            <DataGridTextColumn Header="课程编号" Binding="{Binding CourseCode, UpdateSourceTrigger=PropertyChanged}" Width="130" />
-                            <DataGridTextColumn Header="课程名称" Binding="{Binding CourseName, UpdateSourceTrigger=PropertyChanged}" Width="*" MinWidth="160" />
-                            <DataGridTextColumn Header="成绩" Binding="{Binding ScoreText, UpdateSourceTrigger=PropertyChanged}" Width="70" />
-                            <DataGridTextColumn Header="学分" Binding="{Binding CreditText, UpdateSourceTrigger=PropertyChanged}" Width="70" />
-                            <DataGridCheckBoxColumn Header="计入" Binding="{Binding IsIncluded, UpdateSourceTrigger=PropertyChanged}" Width="60" />
-                        </DataGrid.Columns>
-                    </DataGrid>
+                <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,14">
+                    <Border Style="{StaticResource SoftCard}" Margin="0,0,8,0" Padding="16,13"><StackPanel><TextBlock Text="GPA" Opacity="0.68" /><TextBlock x:Name="GpaTextBlock" Text="—" Style="{StaticResource MetricValue}" /></StackPanel></Border>
+                    <Border Style="{StaticResource SoftCard}" Margin="0,0,8,0" Padding="16,13"><StackPanel><TextBlock Text="GA" Opacity="0.68" /><TextBlock x:Name="GaTextBlock" Text="—" Style="{StaticResource MetricValue}" /></StackPanel></Border>
+                    <Border Style="{StaticResource SoftCard}" Margin="0,0,8,0" Padding="16,13"><StackPanel><TextBlock Text="已修总学分" Opacity="0.68" /><TextBlock x:Name="TotalCreditTextBlock" Text="—" Style="{StaticResource MetricValue}" /></StackPanel></Border>
+                    <Border x:Name="CurrentTermGaCard" Style="{StaticResource SoftCard}" Padding="16,13" ToolTip="此卡片固定显示全部课程中的最新学期 GA"><StackPanel><TextBlock Text="最新学期 GA" Opacity="0.68" /><TextBlock x:Name="CurrentTermGaTextBlock" Text="—" Style="{StaticResource MetricValue}" /></StackPanel></Border>
+                </UniformGrid>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource SoftCard}" Grid.Column="0" Padding="16" Margin="0,0,8,0">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="学期 GPA 趋势" FontWeight="SemiBold" Margin="0,0,0,8" />
+                            <Canvas x:Name="TrendCanvas" MinHeight="210" SizeChanged="ChartCanvas_SizeChanged" />
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource SoftCard}" Grid.Column="1" Padding="16" Margin="8,0,0,0">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="成绩分布" FontWeight="SemiBold" Margin="0,0,0,8" />
+                            <Canvas x:Name="DistributionCanvas" MinHeight="210" SizeChanged="ChartCanvas_SizeChanged" />
+                        </DockPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <Grid x:Name="CoursesPanel" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="课程记录" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock Text="教务导入会保留教务顺序；来源显示为导入、修改或手动。" Opacity="0.66" Margin="0,3,0,0" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:Button Content="导入教务成绩" Appearance="Primary" Click="ImportCourses_Click" Margin="0,0,6,0" />
+                        <ui:Button Content="新增课程" Appearance="Secondary" Click="AddCourse_Click" Margin="0,0,6,0" />
+                        <ui:Button Content="编辑" Appearance="Secondary" Click="EditCourse_Click" Margin="0,0,6,0" />
+                        <ui:Button Content="删除" Appearance="Secondary" Click="DeleteCourse_Click" />
+                    </StackPanel>
                 </Grid>
 
-                <Grid x:Name="RulesPanel" Visibility="Collapsed">
-                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                    <StackPanel Grid.Row="0" Margin="0,0,0,12"><TextBlock Text="计算规则" FontSize="24" FontWeight="SemiBold" /><TextBlock Text="百分制绩点对照表完整沿用旧版计算器；不计入或 0 学分课程不会影响加权 GPA 与 GA。" TextWrapping="Wrap" Foreground="#697386" Margin="0,4,0,0" /></StackPanel>
-                    <DataGrid x:Name="RuleDataGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" Margin="0,0,0,16">
-                        <DataGrid.Columns><DataGridTextColumn Header="成绩下限（含）" Binding="{Binding MinimumScore}" Width="*" /><DataGridTextColumn Header="对应绩点" Binding="{Binding GradePoint}" Width="*" /></DataGrid.Columns>
-                    </DataGrid>
-                    <TextBlock Grid.Row="2" Text="当前计算明细" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8" />
-                    <DataGrid x:Name="CalculationDataGrid" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="课程" Binding="{Binding CourseName}" Width="*" />
-                            <DataGridTextColumn Header="成绩" Binding="{Binding Score}" Width="70" />
-                            <DataGridTextColumn Header="学分" Binding="{Binding Credit}" Width="70" />
-                            <DataGridTextColumn Header="绩点" Binding="{Binding GradePoint}" Width="70" />
-                            <DataGridTextColumn Header="GA 贡献" Binding="{Binding GradeAverageWeight}" Width="90" />
-                            <DataGridTextColumn Header="GPA 贡献" Binding="{Binding GpaWeight}" Width="90" />
-                            <DataGridCheckBoxColumn Header="计入" Binding="{Binding IsIncluded}" Width="60" />
-                        </DataGrid.Columns>
-                    </DataGrid>
+                <Grid Grid.Row="1" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="120" />
+                    </Grid.ColumnDefinitions>
+                    <ui:TextBox x:Name="SearchTextBox" PlaceholderText="搜索课程、编号或学期" TextChanged="Filter_Changed" Margin="0,0,8,0" />
+                    <ComboBox x:Name="TermFilterComboBox" Grid.Column="1" SelectionChanged="Filter_Changed" Margin="0,0,8,0" />
+                    <ComboBox x:Name="IncludedFilterComboBox" Grid.Column="2" SelectionChanged="Filter_Changed">
+                        <ComboBoxItem Content="全部课程" Tag="all" IsSelected="True" />
+                        <ComboBoxItem Content="仅计入" Tag="included" />
+                        <ComboBoxItem Content="仅不计入" Tag="excluded" />
+                    </ComboBox>
                 </Grid>
+
+                <DataGrid x:Name="CourseDataGrid"
+                          Grid.Row="2"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          IsReadOnly="True"
+                          SelectionMode="Extended"
+                          MouseDoubleClick="CourseDataGrid_MouseDoubleClick"
+                          Sorting="CourseDataGrid_Sorting"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="学期" Binding="{Binding Term}" SortMemberPath="Term" Width="120" />
+                        <DataGridTextColumn Header="课程编号" Binding="{Binding CourseCode}" SortMemberPath="CourseCode" Width="125" />
+                        <DataGridTextColumn Header="课程名称" Binding="{Binding CourseName}" SortMemberPath="CourseName" Width="*" MinWidth="200" />
+                        <DataGridTextColumn Header="成绩" Binding="{Binding ScoreText}" SortMemberPath="ScoreText" Width="76" />
+                        <DataGridTextColumn Header="学分" Binding="{Binding CreditText}" SortMemberPath="CreditText" Width="76" />
+                        <DataGridTemplateColumn Header="计入" SortMemberPath="IsIncluded" Width="48">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="{Binding IncludedToolTip}">
+                                        <Ellipse Width="9" Height="9">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="#8A8F98" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsIncluded}" Value="True">
+                                                            <Setter Property="Fill" Value="#2BA84A" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                    </Grid>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="来源" SortMemberPath="SourceLabel" Width="54">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding SourceLabel}" ToolTip="{Binding SourceToolTip}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+
+            <Grid x:Name="RulesPanel" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                    <TextBlock Text="计算规则" FontSize="24" FontWeight="SemiBold" />
+                    <TextBlock Text="百分制成绩按北邮绩点与加权平均分口径换算；0 学分或标记为不计入的课程不会影响 GPA 与 GA。" TextWrapping="Wrap" Opacity="0.66" Margin="0,3,0,0" />
+                </StackPanel>
+                <DataGrid x:Name="RuleDataGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" Margin="0,0,0,14">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="成绩下限（含）" Binding="{Binding MinimumScore}" Width="*" />
+                        <DataGridTextColumn Header="对应绩点" Binding="{Binding GradePoint, StringFormat={}{0:0.0000}}" Width="*" />
+                    </DataGrid.Columns>
+                </DataGrid>
+                <TextBlock Grid.Row="2" Text="当前计算明细" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8" />
+                <DataGrid x:Name="CalculationDataGrid" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="课程" Binding="{Binding CourseName}" Width="*" />
+                        <DataGridTextColumn Header="成绩" Binding="{Binding Score}" Width="70" />
+                        <DataGridTextColumn Header="学分" Binding="{Binding Credit}" Width="88" />
+                        <DataGridTextColumn Header="绩点" Binding="{Binding GradePoint}" Width="88" />
+                        <DataGridTextColumn Header="GA 贡献" Binding="{Binding GradeAverageWeight}" Width="100" />
+                        <DataGridTextColumn Header="GPA 贡献" Binding="{Binding GpaWeight}" Width="100" />
+                        <DataGridTemplateColumn Header="计入" Width="54">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="{Binding IncludedText}">
+                                        <Ellipse Width="9" Height="9">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="#8A8F98" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsIncluded}" Value="True">
+                                                            <Setter Property="Fill" Value="#2BA84A" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                    </Grid>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+
+            <Grid x:Name="HelpPanel" Visibility="Collapsed">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel MaxWidth="660">
+                        <TextBlock Text="使用说明" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        <TextBlock Text="一个档案可以保存多名学生；档案位置完全由你选择。" Opacity="0.68" Margin="0,0,0,16" />
+                        <Border Style="{StaticResource SoftCard}" Padding="16" Margin="0,0,0,9"><StackPanel><TextBlock Text="新建或打开档案" FontWeight="SemiBold" /><TextBlock Text="首次使用时选择一个位置创建 .db 档案；以后可随时打开或另存为该文件。" TextWrapping="Wrap" Opacity="0.72" Margin="0,5,0,0" /></StackPanel></Border>
+                        <Border Style="{StaticResource SoftCard}" Padding="16" Margin="0,0,0,9"><StackPanel><TextBlock Text="复制并导入教务成绩" FontWeight="SemiBold" /><TextBlock Text="在教务系统成绩表内点一下，按 Ctrl+A、Ctrl+C；回到本软件点击“识别成绩表”。软件不会自动访问教务系统。" TextWrapping="Wrap" Opacity="0.72" Margin="0,5,0,0" /></StackPanel></Border>
+                        <Border Style="{StaticResource SoftCard}" Padding="16"><StackPanel><TextBlock Text="核对与保存" FontWeight="SemiBold" /><TextBlock Text="课程来源显示为导入、修改或手动；计入列使用绿色或灰色圆点表示是否参与计算。点击列标题可在升序、降序和默认顺序之间切换。" TextWrapping="Wrap" Opacity="0.72" Margin="0,5,0,0" /></StackPanel></Border>
+                        <Grid Margin="4,20,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.ColumnSpan="2">
+                                <TextBlock x:Name="AppVersionTextBlock" Text="BUPT GPA Calculator" FontWeight="SemiBold" Opacity="0.72" />
+                                <TextBlock Text="lte_z · 小Z工作室#2026" Opacity="0.56" Margin="0,4,0,0" />
+                            </StackPanel>
+                            <TextBlock Grid.Row="1" Text="如果这个小工具帮到了你，欢迎点个 Star，也欢迎提交建议或参与贡献！" TextWrapping="Wrap" Opacity="0.56" Margin="0,10,0,0" VerticalAlignment="Bottom" />
+                            <ui:Button Grid.Row="1" Grid.Column="1" Content="GitHub 仓库" Appearance="Secondary" Click="OpenRepository_Click" VerticalAlignment="Bottom" Margin="16,0,0,0" />
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
         </Grid>
 
-        <Border Grid.Row="2" Background="White" BorderBrush="#E2E6EB" BorderThickness="0,1,0,0" Padding="10,3">
-            <TextBlock x:Name="StatusTextBlock" Text="新建或打开一个成绩档案以开始。" Foreground="#697386" FontSize="12" />
+        <Border Grid.Row="3" Padding="18,7" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}">
+            <TextBlock x:Name="StatusTextBlock" Text="新建或打开一个成绩档案以开始。" Opacity="0.70" FontSize="12" />
         </Border>
+
+        <ui:ContentDialogHost x:Name="RootDialogHost" Grid.RowSpan="4" />
+        <ui:SnackbarPresenter x:Name="RootSnackbarPresenter" Grid.RowSpan="4" Margin="0,0,18,18" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
     </Grid>
-</Window>
+</ui:FluentWindow>

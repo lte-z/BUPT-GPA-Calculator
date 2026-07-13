@@ -21,7 +21,7 @@ public static class AcademicScoreImportParser
             return new ImportParseResult(courses, issues);
         }
 
-        var lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        var lines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Split('\n');
         var headerLineIndex = FindHeaderLine(lines);
         if (headerLineIndex < 0)
         {

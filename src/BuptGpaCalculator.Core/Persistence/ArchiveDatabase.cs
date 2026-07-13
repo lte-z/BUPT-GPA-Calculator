@@ -7,7 +7,7 @@ namespace BuptGpaCalculator.Core.Persistence;
 /// <summary>Provides access to one local SQLite archive file.</summary>
 public sealed class ArchiveDatabase
 {
-    private const int CurrentSchemaVersion = 1;
+    private const int CurrentSchemaVersion = 3;
     private readonly string connectionString;
 
     private ArchiveDatabase(string databasePath)
@@ -95,7 +95,22 @@ public sealed class ArchiveDatabase
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    /// <summary>Gets all courses belonging to a student, ordered by term and name.</summary>
+    /// <summary>Deletes a student and every course belonging to the student.</summary>
+    /// <param name="studentId">The student number to delete.</param>
+    /// <param name="cancellationToken">A token for cancelling the operation.</param>
+    /// <returns>A task that completes when the student is deleted.</returns>
+    public async Task DeleteStudentAsync(string studentId, CancellationToken cancellationToken = default)
+    {
+        ValidateStudentId(studentId);
+
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM Students WHERE StudentId = $studentId;";
+        command.Parameters.AddWithValue("$studentId", studentId.Trim());
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    /// <summary>Gets all courses belonging to a student in their stable default display order.</summary>
     /// <param name="studentId">The student number.</param>
     /// <param name="cancellationToken">A token for cancelling the operation.</param>
     /// <returns>The student's courses.</returns>
@@ -106,10 +121,10 @@ public sealed class ArchiveDatabase
         await using var connection = await OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, StudentId, TermStartYear, TermNumber, CourseCode, CourseName, Score, Credit, IsIncluded
+            SELECT Id, StudentId, TermStartYear, TermNumber, CourseCode, CourseName, Score, Credit, IsIncluded, Source, SortOrder
             FROM Courses
             WHERE StudentId = $studentId
-            ORDER BY TermStartYear, TermNumber, CourseName COLLATE NOCASE, Id;
+            ORDER BY TermStartYear, TermNumber, SortOrder, Id;
             """;
         command.Parameters.AddWithValue("$studentId", studentId.Trim());
 
@@ -125,7 +140,9 @@ public sealed class ArchiveDatabase
                 reader.GetString(5),
                 reader.GetInt32(6),
                 decimal.Parse(reader.GetString(7), CultureInfo.InvariantCulture),
-                reader.GetInt64(8) == 1));
+                reader.GetInt64(8) == 1,
+                (CourseSource)reader.GetInt32(9),
+                reader.GetInt32(10)));
         }
 
         return courses;
@@ -212,6 +229,8 @@ public sealed class ArchiveDatabase
                 Score INTEGER NOT NULL CHECK (Score BETWEEN 0 AND 100),
                 Credit TEXT NOT NULL,
                 IsIncluded INTEGER NOT NULL CHECK (IsIncluded IN (0, 1)),
+                Source INTEGER NOT NULL CHECK (Source IN (0, 1, 2)),
+                SortOrder INTEGER NOT NULL,
                 CreatedAtUtc TEXT NOT NULL,
                 UpdatedAtUtc TEXT NOT NULL,
                 FOREIGN KEY (StudentId) REFERENCES Students (StudentId) ON DELETE CASCADE
@@ -219,17 +238,21 @@ public sealed class ArchiveDatabase
             CREATE UNIQUE INDEX IF NOT EXISTS IX_Courses_Student_Term_Code
                 ON Courses (StudentId, TermStartYear, TermNumber, CourseCode)
                 WHERE CourseCode IS NOT NULL;
-            INSERT OR IGNORE INTO ArchiveInfo (Key, Value) VALUES ('SchemaVersion', '1');
+            INSERT OR IGNORE INTO ArchiveInfo (Key, Value) VALUES ('SchemaVersion', '3');
             """;
         await command.ExecuteNonQueryAsync(cancellationToken);
 
         await using var versionCommand = connection.CreateCommand();
         versionCommand.CommandText = "SELECT Value FROM ArchiveInfo WHERE Key = 'SchemaVersion';";
         var versionText = (string?)await versionCommand.ExecuteScalarAsync(cancellationToken);
-        if (!int.TryParse(versionText, NumberStyles.None, CultureInfo.InvariantCulture, out var version)
-            || version > CurrentSchemaVersion)
+        if (!int.TryParse(versionText, NumberStyles.None, CultureInfo.InvariantCulture, out var version))
         {
-            throw new InvalidDataException("该档案来自更新版本的软件，当前版本无法安全打开。");
+            throw new InvalidDataException("该成绩档案来自早期原型或更新版本，无法由当前版本打开。请新建一个档案后重新导入成绩。");
+        }
+
+        if (version != CurrentSchemaVersion)
+        {
+            throw new InvalidDataException("该成绩档案来自早期原型或更新版本，无法由当前版本打开。请新建一个档案后重新导入成绩。");
         }
     }
 
@@ -251,9 +274,9 @@ public sealed class ArchiveDatabase
         command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO Courses (
-                Id, StudentId, TermStartYear, TermNumber, CourseCode, CourseName, Score, Credit, IsIncluded, CreatedAtUtc, UpdatedAtUtc)
+                Id, StudentId, TermStartYear, TermNumber, CourseCode, CourseName, Score, Credit, IsIncluded, Source, SortOrder, CreatedAtUtc, UpdatedAtUtc)
             VALUES (
-                $id, $studentId, $termStartYear, $termNumber, $courseCode, $courseName, $score, $credit, $isIncluded, $now, $now);
+                $id, $studentId, $termStartYear, $termNumber, $courseCode, $courseName, $score, $credit, $isIncluded, $source, $sortOrder, $now, $now);
             """;
         command.Parameters.AddWithValue("$id", course.Id.ToString("D"));
         command.Parameters.AddWithValue("$studentId", course.StudentId);
@@ -264,6 +287,8 @@ public sealed class ArchiveDatabase
         command.Parameters.AddWithValue("$score", course.Score);
         command.Parameters.AddWithValue("$credit", course.Credit.ToString(CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("$isIncluded", course.IsIncluded ? 1 : 0);
+        command.Parameters.AddWithValue("$source", (int)course.Source);
+        command.Parameters.AddWithValue("$sortOrder", course.SortOrder);
         command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture));
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

@@ -21,7 +21,7 @@ public sealed class ArchiveDatabaseTests
                 student.StudentId,
                 [
                     CreateCourse(student.StudentId, term, "COURSE-001", "课程甲", 98, 0.5m, true),
-                    CreateCourse(student.StudentId, term, "COURSE-002", "课程乙", 92, 4m, false),
+                    CreateCourse(student.StudentId, term, "COURSE-002", "课程乙", 92, 4m, false, CourseSource.Modified),
                 ]);
 
             var students = await archive.GetStudentsAsync();
@@ -30,7 +30,7 @@ public sealed class ArchiveDatabaseTests
             Assert.Equal(student, Assert.Single(students));
             Assert.Equal(2, courses.Count);
             Assert.Contains(courses, course => course.CourseCode == "COURSE-001" && course.Credit == 0.5m);
-            Assert.Contains(courses, course => course.CourseCode == "COURSE-002" && !course.IsIncluded);
+            Assert.Contains(courses, course => course.CourseCode == "COURSE-002" && !course.IsIncluded && course.Source == CourseSource.Modified);
         }
         finally
         {
@@ -76,6 +76,28 @@ public sealed class ArchiveDatabaseTests
         await Assert.ThrowsAsync<FileNotFoundException>(() => ArchiveDatabase.OpenAsync(databasePath));
     }
 
+    [Fact]
+    public async Task DeleteStudentAsync_RemovesStudentAndCourses()
+    {
+        var databasePath = CreateTemporaryDatabasePath();
+        try
+        {
+            var archive = await ArchiveDatabase.CreateAsync(databasePath);
+            var student = new StudentProfile("test-student", "测试用户");
+            await archive.SaveStudentAsync(student);
+            await archive.ReplaceCoursesAsync(student.StudentId, [CreateCourse(student.StudentId, AcademicTerm.Parse("2025-2026-1"), "A", "课程甲", 80, 2m, true)]);
+
+            await archive.DeleteStudentAsync(student.StudentId);
+
+            Assert.Empty(await archive.GetStudentsAsync());
+            Assert.Empty(await archive.GetCoursesAsync(student.StudentId));
+        }
+        finally
+        {
+            DeleteTemporaryDatabase(databasePath);
+        }
+    }
+
     private static CourseRecord CreateCourse(
         string studentId,
         AcademicTerm term,
@@ -83,7 +105,8 @@ public sealed class ArchiveDatabaseTests
         string name,
         int score,
         decimal credit,
-        bool isIncluded) => new(Guid.Empty, studentId, term, code, name, score, credit, isIncluded);
+        bool isIncluded,
+        CourseSource source = CourseSource.Manual) => new(Guid.Empty, studentId, term, code, name, score, credit, isIncluded, source);
 
     private static string CreateTemporaryDatabasePath() => Path.Combine(Path.GetTempPath(), $"BuptGpaCalculator-{Guid.NewGuid():N}.db");
 
