@@ -1,0 +1,23 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+TestResults/
+artifacts/
+
+# IDE and user settings
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local GPA archives and SQLite sidecar files
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Local logs and temporary files
+*.log
+*.tmp
+*.bak
