@@ -1,0 +1,50 @@
+name: Release
+
+on:
+    push:
+        tags: ["v*"]
+
+permissions:
+    contents: write
+
+jobs:
+    release:
+        name: Publish Windows x64 release
+        runs-on: windows-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  global-json-file: global.json
+
+            - name: Restore, build and test
+              run: |
+                  dotnet restore BuptGpaCalculator.sln
+                  dotnet build BuptGpaCalculator.sln --configuration Release --no-restore
+                  dotnet test BuptGpaCalculator.sln --configuration Release --no-build
+
+            - name: Publish portable executable
+              run: >-
+                  dotnet publish src/BuptGpaCalculator.App/BuptGpaCalculator.App.csproj
+                  --configuration Release --runtime win-x64 --self-contained true
+                  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+                  -p:PublishTrimmed=false --no-restore --output artifacts/publish
+
+            - name: Package release files
+              shell: pwsh
+              run: |
+                  $tag = "${{ github.ref_name }}"
+                  $archive = "BUPT-GPA-$tag-win-x64.zip"
+                  Compress-Archive -Path artifacts/publish/BUPT-GPA.exe -DestinationPath $archive
+                  $hash = (Get-FileHash -Algorithm SHA256 $archive).Hash.ToLowerInvariant()
+                  "$hash  $archive" | Set-Content -NoNewline "$archive.sha256"
+
+            - name: Create GitHub Release
+              shell: pwsh
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: gh release create "${{ github.ref_name }}" *.zip *.sha256 --generate-notes --title "BUPT GPA Calculator ${{ github.ref_name }}"

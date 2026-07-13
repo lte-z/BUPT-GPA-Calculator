@@ -1,0 +1,43 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+permissions:
+    contents: read
+
+jobs:
+    build-and-test:
+        name: Windows .NET 10
+        runs-on: windows-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Set up .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  global-json-file: global.json
+
+            - name: Restore
+              run: dotnet restore BuptGpaCalculator.sln
+
+            - name: Build
+              run: dotnet build BuptGpaCalculator.sln --configuration Release --no-restore
+
+            - name: Test
+              run: dotnet test BuptGpaCalculator.sln --configuration Release --no-build
+
+            - name: Publish smoke check
+              run: >-
+                  dotnet publish src/BuptGpaCalculator.App/BuptGpaCalculator.App.csproj
+                  --configuration Release --runtime win-x64 --self-contained true
+                  -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+                  -p:PublishTrimmed=false --no-restore --output artifacts/publish
+
+            - name: Check patch whitespace
+              run: git diff --check
