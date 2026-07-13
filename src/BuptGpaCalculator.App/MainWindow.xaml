@@ -158,51 +158,57 @@
                     </ComboBox>
                 </Grid>
 
-                <DataGrid x:Name="CourseDataGrid"
-                          Grid.Row="2"
-                          AutoGenerateColumns="False"
-                          CanUserAddRows="False"
-                          IsReadOnly="True"
-                          SelectionMode="Extended"
-                          MouseDoubleClick="CourseDataGrid_MouseDoubleClick"
-                          Sorting="CourseDataGrid_Sorting"
-                          HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="学期" Binding="{Binding Term}" SortMemberPath="Term" Width="120" />
-                        <DataGridTextColumn Header="课程编号" Binding="{Binding CourseCode}" SortMemberPath="CourseCode" Width="125" />
-                        <DataGridTextColumn Header="课程名称" Binding="{Binding CourseName}" SortMemberPath="CourseName" Width="*" MinWidth="200" />
-                        <DataGridTextColumn Header="成绩" Binding="{Binding ScoreText}" SortMemberPath="ScoreText" Width="76" />
-                        <DataGridTextColumn Header="学分" Binding="{Binding CreditText}" SortMemberPath="CreditText" Width="76" />
-                        <DataGridTemplateColumn Header="计入" SortMemberPath="IsIncluded" Width="48">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="{Binding IncludedToolTip}">
-                                        <Ellipse Width="9" Height="9">
-                                            <Ellipse.Style>
-                                                <Style TargetType="Ellipse">
-                                                    <Setter Property="Fill" Value="#8A8F98" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsIncluded}" Value="True">
-                                                            <Setter Property="Fill" Value="#2BA84A" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Ellipse.Style>
-                                        </Ellipse>
-                                    </Grid>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                        <DataGridTemplateColumn Header="来源" SortMemberPath="SourceLabel" Width="54">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding SourceLabel}" ToolTip="{Binding SourceToolTip}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <Grid Grid.Row="2">
+                    <DataGrid x:Name="CourseDataGrid"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              SelectionMode="Extended"
+                              MouseDoubleClick="CourseDataGrid_MouseDoubleClick"
+                              Sorting="CourseDataGrid_Sorting"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="学期" Binding="{Binding Term}" SortMemberPath="Term" Width="120" />
+                            <DataGridTextColumn Header="课程编号" Binding="{Binding CourseCode}" SortMemberPath="CourseCode" Width="125" />
+                            <DataGridTextColumn Header="课程名称" Binding="{Binding CourseName}" SortMemberPath="CourseName" Width="*" MinWidth="200" />
+                            <DataGridTextColumn Header="成绩" Binding="{Binding ScoreText}" SortMemberPath="ScoreText" Width="76" />
+                            <DataGridTextColumn Header="学分" Binding="{Binding CreditText}" SortMemberPath="CreditText" Width="76" />
+                            <DataGridTemplateColumn Header="计入" SortMemberPath="IsIncluded" Width="48">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="{Binding IncludedToolTip}">
+                                            <Ellipse Width="9" Height="9">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Fill" Value="#8A8F98" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsIncluded}" Value="True">
+                                                                <Setter Property="Fill" Value="#2BA84A" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="来源" SortMemberPath="SourceLabel" Width="54">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding SourceLabel}" ToolTip="{Binding SourceToolTip}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel x:Name="EmptyCoursesHintPanel" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed">
+                        <TextBlock Text="暂无课程记录" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Opacity="0.82" />
+                        <TextBlock Text="点击右上角“导入教务成绩”或“新增课程”开始" TextAlignment="Center" Opacity="0.58" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Grid>
             </Grid>
 
             <Grid x:Name="RulesPanel" Visibility="Collapsed">
@@ -223,36 +229,43 @@
                     </DataGrid.Columns>
                 </DataGrid>
                 <TextBlock Grid.Row="2" Text="当前计算明细" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8" />
-                <DataGrid x:Name="CalculationDataGrid" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="课程" Binding="{Binding CourseName}" Width="*" />
-                        <DataGridTextColumn Header="成绩" Binding="{Binding Score}" Width="70" />
-                        <DataGridTextColumn Header="学分" Binding="{Binding Credit}" Width="88" />
-                        <DataGridTextColumn Header="绩点" Binding="{Binding GradePoint}" Width="88" />
-                        <DataGridTextColumn Header="GA 贡献" Binding="{Binding GradeAverageWeight}" Width="100" />
-                        <DataGridTextColumn Header="GPA 贡献" Binding="{Binding GpaWeight}" Width="100" />
-                        <DataGridTemplateColumn Header="计入" Width="54">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="{Binding IncludedText}">
-                                        <Ellipse Width="9" Height="9">
-                                            <Ellipse.Style>
-                                                <Style TargetType="Ellipse">
-                                                    <Setter Property="Fill" Value="#8A8F98" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsIncluded}" Value="True">
-                                                            <Setter Property="Fill" Value="#2BA84A" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Ellipse.Style>
-                                        </Ellipse>
-                                    </Grid>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <Grid Grid.Row="3">
+                    <DataGrid x:Name="CalculationDataGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="课程" Binding="{Binding CourseName}" Width="*" />
+                            <DataGridTextColumn Header="成绩" Binding="{Binding Score}" Width="70" />
+                            <DataGridTextColumn Header="学分" Binding="{Binding Credit}" Width="88" />
+                            <DataGridTextColumn Header="绩点" Binding="{Binding GradePoint}" Width="88" />
+                            <DataGridTextColumn Header="GA 贡献" Binding="{Binding GradeAverageWeight}" Width="100" />
+                            <DataGridTextColumn Header="GPA 贡献" Binding="{Binding GpaWeight}" Width="100" />
+                            <DataGridTemplateColumn Header="计入" Width="54">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="{Binding IncludedText}">
+                                            <Ellipse Width="9" Height="9">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Fill" Value="#8A8F98" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsIncluded}" Value="True">
+                                                                <Setter Property="Fill" Value="#2BA84A" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+                                        </Grid>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel x:Name="EmptyCalculationHintPanel" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed">
+                        <TextBlock Text="暂无计算明细" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Opacity="0.82" />
+                        <TextBlock Text="添加计入统计的课程后将在这里显示逐课贡献" TextAlignment="Center" Opacity="0.58" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Grid>
             </Grid>
 
             <Grid x:Name="HelpPanel" Visibility="Collapsed">

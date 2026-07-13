@@ -5,5 +5,11 @@
         <AnalysisLevel>latest</AnalysisLevel>
         <Deterministic>true</Deterministic>
         <VersionPrefix>0.1.0</VersionPrefix>
+        <Authors>lte_z</Authors>
+        <Company>小Z工作室#2026</Company>
+        <Product>BUPT GPA Calculator</Product>
+        <Description>面向北邮学生的本地 Windows GPA 计算器。</Description>
+        <Copyright>Copyright © 2026 lte_z</Copyright>
+        <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     </PropertyGroup>
 </Project>

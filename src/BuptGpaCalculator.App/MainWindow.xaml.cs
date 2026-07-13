@@ -53,6 +53,7 @@ public partial class MainWindow
         RuleDataGrid.ItemsSource = GpaScale.Rules;
         courseRows.CollectionChanged += RowsChanged;
         SetPage(WelcomePanel);
+        RefreshEmptyStates();
     }
 
     private async void WelcomePrimaryButton_Click(object sender, RoutedEventArgs e)
@@ -404,6 +405,7 @@ public partial class MainWindow
         if (sender is FrameworkElement { IsLoaded: true })
         {
             courseView.Refresh();
+            RefreshEmptyStates();
         }
     }
 
@@ -636,6 +638,7 @@ public partial class MainWindow
         RefreshOverviewScope();
         courseView.Refresh();
         RefreshStatistics();
+        RefreshEmptyStates();
     }
 
     private void RefreshTermFilter()
@@ -682,9 +685,10 @@ public partial class MainWindow
         {
             GpaTextBlock.Text = GaTextBlock.Text = TotalCreditTextBlock.Text = CurrentTermGaTextBlock.Text = "—";
             CurrentTermGaCard.Opacity = 1;
-            OverviewSubtitleTextBlock.Text = currentStudent is null ? "打开档案后查看统计结果" : $"{currentStudent.Name} · 暂无有效课程";
+            OverviewSubtitleTextBlock.Text = currentStudent is null ? "打开档案后查看统计结果" : $"{currentStudent.Name} · 请前往“课程记录”导入或新增课程";
             CalculationDataGrid.ItemsSource = null;
             RefreshCharts([]);
+            RefreshEmptyStates();
             return;
         }
 
@@ -700,6 +704,13 @@ public partial class MainWindow
         OverviewSubtitleTextBlock.Text = currentStudent is null ? "打开档案后查看统计结果" : $"{currentStudent.Name} · {scope.DisplayName} · 计入学分 {result.IncludedCredit:0.0}";
         CalculationDataGrid.ItemsSource = result.Contributions.Select(item => new CalculationRow(item)).ToList();
         RefreshCharts(scopedCourses);
+        RefreshEmptyStates();
+    }
+
+    private void RefreshEmptyStates()
+    {
+        EmptyCoursesHintPanel.Visibility = courseRows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyCalculationHintPanel.Visibility = CalculationDataGrid.Items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void RefreshCharts(IReadOnlyList<CourseRecord>? records = null) => DrawCharts(records ?? GetValidCourses());
@@ -716,7 +727,7 @@ public partial class MainWindow
         var terms = records.Select(x => x.Term).Distinct().OrderBy(x => x).ToList();
         if (terms.Count == 0)
         {
-            ChartMessage(TrendCanvas, "暂无可展示的课程记录");
+            ChartMessage(TrendCanvas, "添加课程后显示学期趋势");
             return;
         }
 
@@ -752,7 +763,7 @@ public partial class MainWindow
         DistributionCanvas.Children.Clear();
         if (records.Count == 0)
         {
-            ChartMessage(DistributionCanvas, "暂无可展示的课程记录");
+            ChartMessage(DistributionCanvas, "添加课程后显示成绩分布");
             return;
         }
 

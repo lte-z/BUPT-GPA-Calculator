@@ -13,6 +13,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <AssemblyName>BUPT-GPA</AssemblyName>
+    <AssemblyTitle>BUPT GPA Calculator</AssemblyTitle>
     <RootNamespace>BuptGpaCalculator.App</RootNamespace>
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
