@@ -24,7 +24,7 @@ jobs:
                   global-json-file: global.json
 
             - name: Restore
-              run: dotnet restore BuptGpaCalculator.sln
+              run: dotnet restore BuptGpaCalculator.sln --runtime win-x64
 
             - name: Build
               run: dotnet build BuptGpaCalculator.sln --configuration Release --no-restore
