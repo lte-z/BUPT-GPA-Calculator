@@ -93,10 +93,10 @@
                 </Grid>
 
                 <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,14">
-                    <Border Style="{StaticResource SoftCard}" Margin="0,0,8,0" Padding="16,13"><StackPanel><TextBlock Text="GPA" Opacity="0.68" /><TextBlock x:Name="GpaTextBlock" Text="—" Style="{StaticResource MetricValue}" /></StackPanel></Border>
-                    <Border Style="{StaticResource SoftCard}" Margin="0,0,8,0" Padding="16,13"><StackPanel><TextBlock Text="GA" Opacity="0.68" /><TextBlock x:Name="GaTextBlock" Text="—" Style="{StaticResource MetricValue}" /></StackPanel></Border>
-                    <Border Style="{StaticResource SoftCard}" Margin="0,0,8,0" Padding="16,13"><StackPanel><TextBlock Text="已修总学分" Opacity="0.68" /><TextBlock x:Name="TotalCreditTextBlock" Text="—" Style="{StaticResource MetricValue}" /></StackPanel></Border>
-                    <Border x:Name="CurrentTermGaCard" Style="{StaticResource SoftCard}" Padding="16,13" ToolTip="此卡片固定显示全部课程中的最新学期 GA"><StackPanel><TextBlock Text="最新学期 GA" Opacity="0.68" /><TextBlock x:Name="CurrentTermGaTextBlock" Text="—" Style="{StaticResource MetricValue}" /></StackPanel></Border>
+                    <Border Style="{StaticResource SoftCard}" Margin="0,0,8,0" Padding="16,13" ToolTip="按计入课程的学分加权绩点计算"><StackPanel><TextBlock Text="GPA" Opacity="0.68" /><TextBlock x:Name="GpaTextBlock" Text="—" Style="{StaticResource MetricValue}" /></StackPanel></Border>
+                    <Border Style="{StaticResource SoftCard}" Margin="0,0,8,0" Padding="16,13" ToolTip="按计入课程的学分加权成绩计算"><StackPanel><TextBlock Text="GA" Opacity="0.68" /><TextBlock x:Name="GaTextBlock" Text="—" Style="{StaticResource MetricValue}" /></StackPanel></Border>
+                    <Border Style="{StaticResource SoftCard}" Margin="0,0,8,0" Padding="16,13" ToolTip="显示当前范围内所有已录入课程的学分总和"><StackPanel><TextBlock Text="已修总学分" Opacity="0.68" /><TextBlock x:Name="TotalCreditTextBlock" Text="—" Style="{StaticResource MetricValue}" /></StackPanel></Border>
+                    <Border x:Name="CurrentTermGaCard" Style="{StaticResource SoftCard}" Padding="16,13" ToolTip="固定显示全部课程中的最新学期 GA，不随左侧范围筛选变化"><StackPanel><TextBlock Text="最新学期 GA" Opacity="0.68" /><TextBlock x:Name="CurrentTermGaTextBlock" Text="—" Style="{StaticResource MetricValue}" /></StackPanel></Border>
                 </UniformGrid>
 
                 <Grid Grid.Row="2">
@@ -106,7 +106,16 @@
                     </Grid.ColumnDefinitions>
                     <Border Style="{StaticResource SoftCard}" Grid.Column="0" Padding="16" Margin="0,0,8,0">
                         <DockPanel>
-                            <TextBlock DockPanel.Dock="Top" Text="学期 GPA 趋势" FontWeight="SemiBold" Margin="0,0,0,8" />
+                            <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="TrendTitleTextBlock" Text="学期 GA 趋势" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <ui:Button x:Name="ToggleTrendMetricButton" Grid.Column="1" Appearance="Secondary" Width="26" Height="24" Padding="0" ToolTip="切换为 GPA 趋势" Click="ToggleTrendMetric_Click">
+                                    <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE895;" FontSize="12" />
+                                </ui:Button>
+                            </Grid>
                             <Canvas x:Name="TrendCanvas" MinHeight="210" SizeChanged="ChartCanvas_SizeChanged" />
                         </DockPanel>
                     </Border>
@@ -136,10 +145,10 @@
                         <TextBlock Text="教务导入会保留教务顺序；来源显示为导入、修改或手动。" Opacity="0.66" Margin="0,3,0,0" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <ui:Button Content="导入教务成绩" Appearance="Primary" Click="ImportCourses_Click" Margin="0,0,6,0" />
+                        <ui:Button Content="导入教务成绩" Appearance="Primary" Click="ImportCourses_Click" Margin="0,0,6,0" ToolTip="粘贴并识别教务系统课程成绩表" />
                         <ui:Button Content="新增课程" Appearance="Secondary" Click="AddCourse_Click" Margin="0,0,6,0" />
                         <ui:Button Content="编辑" Appearance="Secondary" Click="EditCourse_Click" Margin="0,0,6,0" />
-                        <ui:Button Content="删除" Appearance="Secondary" Click="DeleteCourse_Click" />
+                        <ui:Button Content="删除" Appearance="Secondary" Click="DeleteCourse_Click" ToolTip="删除选中的课程记录" />
                     </StackPanel>
                 </Grid>
 

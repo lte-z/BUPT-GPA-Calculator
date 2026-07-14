@@ -39,6 +39,7 @@ public partial class MainWindow
     private bool isDirty;
     private bool isLoading;
     private bool isClosingAfterConfirm;
+    private bool isGradeAverageTrend = true;
     private string? sortProperty;
     private int sortPhase;
 
@@ -52,6 +53,7 @@ public partial class MainWindow
         CourseDataGrid.ItemsSource = courseView;
         RuleDataGrid.ItemsSource = GpaScale.Rules;
         courseRows.CollectionChanged += RowsChanged;
+        UpdateTrendMetricText();
         SetPage(WelcomePanel);
         RefreshEmptyStates();
     }
@@ -412,6 +414,13 @@ public partial class MainWindow
     private void OverviewScope_Changed(object sender, SelectionChangedEventArgs e) => RefreshStatistics();
     private void ChartCanvas_SizeChanged(object sender, SizeChangedEventArgs e) => RefreshCharts();
 
+    private void ToggleTrendMetric_Click(object sender, RoutedEventArgs e)
+    {
+        isGradeAverageTrend = !isGradeAverageTrend;
+        UpdateTrendMetricText();
+        RefreshCharts();
+    }
+
     private void CourseDataGrid_Sorting(object sender, DataGridSortingEventArgs e)
     {
         e.Handled = true;
@@ -713,7 +722,14 @@ public partial class MainWindow
         EmptyCalculationHintPanel.Visibility = CalculationDataGrid.Items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void RefreshCharts(IReadOnlyList<CourseRecord>? records = null) => DrawCharts(records ?? GetValidCourses());
+    private void RefreshCharts(IReadOnlyList<CourseRecord>? records = null) => DrawCharts(records ?? GetCurrentScopedCourses());
+
+    private IReadOnlyList<CourseRecord> GetCurrentScopedCourses()
+    {
+        var courses = GetValidCourses();
+        var scope = OverviewTermComboBox.SelectedItem as OverviewScopeOption ?? OverviewScopeOption.All;
+        return scope.Filter(courses).ToList();
+    }
 
     private void DrawCharts(IReadOnlyList<CourseRecord> records)
     {
@@ -723,26 +739,33 @@ public partial class MainWindow
 
     private void DrawTrend(IReadOnlyList<CourseRecord> records)
     {
+        UpdateTrendMetricText();
         TrendCanvas.Children.Clear();
         var terms = records.Select(x => x.Term).Distinct().OrderBy(x => x).ToList();
         if (terms.Count == 0)
         {
-            ChartMessage(TrendCanvas, "添加课程后显示学期趋势");
+            ChartMessage(TrendCanvas, isGradeAverageTrend ? "添加课程后显示 GA 趋势" : "添加课程后显示 GPA 趋势");
             return;
         }
 
         var width = Math.Max(TrendCanvas.ActualWidth, 220d);
         var height = Math.Max(TrendCanvas.ActualHeight, 160d);
-        const double left = 30, right = 12, top = 16, bottom = 32;
+        const double left = 46, right = 28, top = 16, bottom = 32;
+        const double plotInset = 22;
+        var maximum = isGradeAverageTrend ? 100m : 4m;
+        var topLabel = isGradeAverageTrend ? "100" : "4.0";
+        var plotLeft = left + plotInset;
+        var plotRight = width - right - plotInset;
         TrendCanvas.Children.Add(new Line { X1 = left, Y1 = top, X2 = left, Y2 = height - bottom, Stroke = Brushes.Gray, Opacity = .35 });
         TrendCanvas.Children.Add(new Line { X1 = left, Y1 = height - bottom, X2 = width - right, Y2 = height - bottom, Stroke = Brushes.Gray, Opacity = .35 });
 
         var line = new Polyline { Stroke = TryFindResource("AccentTextFillColorPrimaryBrush") as Brush ?? Brushes.DodgerBlue, StrokeThickness = 2.5 };
         for (var i = 0; i < terms.Count; i++)
         {
-            var value = GpaCalculator.Calculate(records.Where(x => x.Term == terms[i])).Gpa ?? 0;
-            var x = terms.Count == 1 ? (left + width - right) / 2 : left + (width - left - right) * i / (terms.Count - 1);
-            var y = height - bottom - (double)(value / 4m) * (height - top - bottom);
+            var result = GpaCalculator.Calculate(records.Where(x => x.Term == terms[i]));
+            var value = isGradeAverageTrend ? result.GradeAverage ?? 0 : result.Gpa ?? 0;
+            var x = terms.Count == 1 ? (plotLeft + plotRight) / 2 : plotLeft + (plotRight - plotLeft) * i / (terms.Count - 1);
+            var y = height - bottom - (double)(value / maximum) * (height - top - bottom);
             line.Points.Add(new Point(x, y));
 
             var dot = new Ellipse { Width = 7, Height = 7, Fill = line.Stroke };
@@ -750,13 +773,22 @@ public partial class MainWindow
             Canvas.SetTop(dot, y - 3.5);
             TrendCanvas.Children.Add(dot);
             Label(TrendCanvas, value.ToString("0.0000", CultureInfo.InvariantCulture), x - 18, Math.Max(0, y - 21));
-            Label(TrendCanvas, terms[i].TermNumber.ToString(CultureInfo.InvariantCulture), x - 3, height - 23);
+            Label(TrendCanvas, ShortTermLabel(terms[i]), x - 20, height - 23);
         }
 
         TrendCanvas.Children.Add(line);
-        Label(TrendCanvas, "4.0", 2, top - 3);
+        Label(TrendCanvas, topLabel, 2, top - 3);
         Label(TrendCanvas, "0", 14, height - bottom - 4);
     }
+
+    private void UpdateTrendMetricText()
+    {
+        TrendTitleTextBlock.Text = isGradeAverageTrend ? "学期 GA 趋势" : "学期 GPA 趋势";
+        ToggleTrendMetricButton.ToolTip = isGradeAverageTrend ? "切换为 GPA 趋势" : "切换为 GA 趋势";
+    }
+
+    private static string ShortTermLabel(AcademicTerm term)
+        => $"{term.StartYear % 100:00}-{(term.StartYear + 1) % 100:00}-{term.TermNumber}";
 
     private void DrawDistribution(IReadOnlyList<CourseRecord> records)
     {
@@ -920,14 +952,52 @@ public partial class MainWindow
     {
         while (true)
         {
-            var termBox = new TextBox { Text = row.Term, PlaceholderText = "例如 2025-2026-1" };
+            var term = AcademicTerm.TryParse(row.Term, out var parsedTerm)
+                ? parsedTerm
+                : AcademicTerm.Parse(SuggestedTerm());
+            var startYearBox = new TextBox
+            {
+                Text = term.StartYear.ToString(CultureInfo.InvariantCulture),
+                Width = 90,
+                PlaceholderText = "起始年",
+            };
+            var endYearBlock = new TextBlock
+            {
+                Text = (term.StartYear + 1).ToString(CultureInfo.InvariantCulture),
+                Width = 42,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextAlignment = TextAlignment.Center,
+                Opacity = 0.72,
+            };
+            var termNumberBox = new ComboBox
+            {
+                Width = 64,
+                ItemsSource = new[] { 1, 2, 3 },
+                SelectedItem = term.TermNumber,
+            };
+            startYearBox.TextChanged += (_, _) =>
+            {
+                if (int.TryParse(startYearBox.Text.Trim(), out var startYear))
+                {
+                    endYearBlock.Text = (startYear + 1).ToString(CultureInfo.InvariantCulture);
+                }
+            };
+            var termPanel = new StackPanel();
+            termPanel.Children.Add(new TextBlock { Text = "开课学期", Opacity = 0.68, Margin = new Thickness(0, 0, 0, 5) });
+            var termInputsPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            termInputsPanel.Children.Add(startYearBox);
+            termInputsPanel.Children.Add(new TextBlock { Text = "-", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(3, 0, 3, 0), Opacity = 0.58 });
+            termInputsPanel.Children.Add(endYearBlock);
+            termInputsPanel.Children.Add(new TextBlock { Text = "-", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(3, 0, 3, 0), Opacity = 0.58 });
+            termInputsPanel.Children.Add(termNumberBox);
+            termPanel.Children.Add(termInputsPanel);
             var codeBox = new TextBox { Text = row.CourseCode, PlaceholderText = "课程编号（可选）", Margin = new Thickness(0, 8, 0, 0) };
             var nameBox = new TextBox { Text = row.CourseName, PlaceholderText = "课程名称", Margin = new Thickness(0, 8, 0, 0) };
             var scoreBox = new TextBox { Text = row.ScoreText, PlaceholderText = "成绩（0-100 整数）", Margin = new Thickness(0, 8, 0, 0) };
             var creditBox = new TextBox { Text = row.CreditText, PlaceholderText = "学分（可为 0）", Margin = new Thickness(0, 8, 0, 0) };
             var includedBox = new CheckBox { Content = "计入 GPA 与 GA", IsChecked = row.IsIncluded, Margin = new Thickness(0, 12, 0, 0) };
             var panel = new StackPanel { Width = 420 };
-            panel.Children.Add(termBox);
+            panel.Children.Add(termPanel);
             panel.Children.Add(codeBox);
             panel.Children.Add(nameBox);
             panel.Children.Add(scoreBox);
@@ -937,7 +1007,23 @@ public partial class MainWindow
             var result = await ShowContentDialogAsync(title, panel, "保存", null, "取消");
             if (result != ContentDialogResult.Primary) return false;
 
-            row.Term = termBox.Text;
+            if (!int.TryParse(startYearBox.Text.Trim(), out var startYear)
+                || termNumberBox.SelectedItem is not int termNumber)
+            {
+                await ShowErrorAsync("请修正课程信息", "开课学期必须包含有效的起始年份和学期编号。");
+                continue;
+            }
+
+            try
+            {
+                row.Term = new AcademicTerm(startYear, termNumber).ToString();
+            }
+            catch (ArgumentOutOfRangeException exception)
+            {
+                await ShowErrorAsync("请修正课程信息", exception.Message);
+                continue;
+            }
+
             row.CourseCode = codeBox.Text;
             row.CourseName = nameBox.Text;
             row.ScoreText = scoreBox.Text;
