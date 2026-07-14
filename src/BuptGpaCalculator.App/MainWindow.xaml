@@ -285,7 +285,15 @@
                         <Border Style="{StaticResource SoftCard}" Padding="16" Margin="0,0,0,9"><StackPanel><TextBlock Text="新建或打开档案" FontWeight="SemiBold" /><TextBlock Text="首次使用时选择一个位置创建 .db 档案；以后可随时打开或另存为该文件。" TextWrapping="Wrap" Opacity="0.72" Margin="0,5,0,0" /></StackPanel></Border>
                         <Border Style="{StaticResource SoftCard}" Padding="16" Margin="0,0,0,9"><StackPanel><TextBlock Text="复制并导入教务成绩" FontWeight="SemiBold" /><TextBlock Text="在教务系统成绩表内点一下，按 Ctrl+A、Ctrl+C；回到本软件点击“识别成绩表”。软件不会自动访问教务系统。" TextWrapping="Wrap" Opacity="0.72" Margin="0,5,0,0" /></StackPanel></Border>
                         <Border Style="{StaticResource SoftCard}" Padding="16"><StackPanel><TextBlock Text="核对与保存" FontWeight="SemiBold" /><TextBlock Text="课程来源显示为导入、修改或手动；计入列使用绿色或灰色圆点表示是否参与计算。点击列标题可在升序、降序和默认顺序之间切换。" TextWrapping="Wrap" Opacity="0.72" Margin="0,5,0,0" /></StackPanel></Border>
-                        <Grid Margin="4,20,0,0">
+                        <Grid Margin="4,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="更详细的步骤与常见问题可查看完整用户指南。" TextWrapping="Wrap" Opacity="0.62" VerticalAlignment="Center" />
+                            <ui:Button Grid.Column="1" Content="用户指南" Appearance="Secondary" Click="OpenUserGuide_Click" Margin="12,0,0,0" />
+                        </Grid>
+                        <Grid Margin="4,14,0,0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />

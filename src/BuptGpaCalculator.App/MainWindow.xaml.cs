@@ -306,6 +306,18 @@ public partial class MainWindow
         }
     }
 
+    private async void OpenUserGuide_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/lte-z/BUPT-GPA-Calculator/blob/main/docs/user-guide.md") { UseShellExecute = true });
+        }
+        catch (Exception exception)
+        {
+            await ShowErrorAsync("无法打开用户指南", exception.Message);
+        }
+    }
+
     private async void AddCourse_Click(object sender, RoutedEventArgs e)
     {
         if (!await EnsureStudentAsync()) return;

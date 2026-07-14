@@ -29,7 +29,7 @@ dotnet publish src/BuptGpaCalculator.App/BuptGpaCalculator.App.csproj `
     --output artifacts/publish
 ```
 
-发布目录中的 `BUPT-GPA.exe` 是面向用户的 portable 程序。程序不会自动生成成绩档案；用户首次使用时自行选择新建或打开 `.db` 文件。
+发布目录中的 `BUPT-GPA.exe` 是面向用户的 self-contained portable 程序，内置运行所需的 .NET 组件。Release 会把这个单文件压缩为 `BUPT-GPA-vX.Y.Z-win-x64.zip`；用户解压后直接运行 `BUPT-GPA.exe`。程序不会自动生成成绩档案；用户首次使用时自行选择新建或打开 `.db` 文件。
 
 ## 版本发布
 
