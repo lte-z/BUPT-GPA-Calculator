@@ -112,8 +112,8 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock x:Name="TrendTitleTextBlock" Text="学期 GA 趋势" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                <ui:Button x:Name="ToggleTrendMetricButton" Grid.Column="1" Appearance="Secondary" Width="26" Height="24" Padding="0" ToolTip="切换为 GPA 趋势" Click="ToggleTrendMetric_Click">
-                                    <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE895;" FontSize="12" />
+                                <ui:Button x:Name="ToggleTrendMetricButton" Grid.Column="1" Appearance="Secondary" Width="22" Height="22" Padding="0" ToolTip="切换为 GPA 趋势" Click="ToggleTrendMetric_Click">
+                                    <TextBlock FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Text="&#xE895;" FontSize="11" />
                                 </ui:Button>
                             </Grid>
                             <Canvas x:Name="TrendCanvas" MinHeight="210" SizeChanged="ChartCanvas_SizeChanged" />
