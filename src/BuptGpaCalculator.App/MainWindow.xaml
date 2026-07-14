@@ -22,7 +22,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Grid.Row="0" Title="BUPT GPA Calculator" />
+        <ui:TitleBar Grid.Row="0" Title="BUPT GPA Calculator" Icon="{ui:ImageIcon 'pack://application:,,,/Assets/Favicon.png'}" />
 
         <Border Grid.Row="1" Padding="18,10,18,12" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}">
             <Grid>
