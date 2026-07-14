@@ -278,39 +278,44 @@
             </Grid>
 
             <Grid x:Name="HelpPanel" Visibility="Collapsed">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel MaxWidth="660">
+                <Grid MaxWidth="660" HorizontalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0">
                         <TextBlock Text="使用说明" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,8" />
-                        <TextBlock Text="一个档案可以保存多名学生；档案位置完全由你选择。" Opacity="0.68" Margin="0,0,0,16" />
+                        <TextBlock Text="一个档案可以保存多名学生；档案位置完全由你选择。" Opacity="0.68" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,12,0,12">
                         <Border Style="{StaticResource SoftCard}" Padding="16" Margin="0,0,0,9"><StackPanel><TextBlock Text="新建或打开档案" FontWeight="SemiBold" /><TextBlock Text="首次使用时选择一个位置创建 .db 档案；以后可随时打开或另存为该文件。" TextWrapping="Wrap" Opacity="0.72" Margin="0,5,0,0" /></StackPanel></Border>
                         <Border Style="{StaticResource SoftCard}" Padding="16" Margin="0,0,0,9"><StackPanel><TextBlock Text="复制并导入教务成绩" FontWeight="SemiBold" /><TextBlock Text="在教务系统成绩表内点一下，按 Ctrl+A、Ctrl+C；回到本软件点击“识别成绩表”。软件不会自动访问教务系统。" TextWrapping="Wrap" Opacity="0.72" Margin="0,5,0,0" /></StackPanel></Border>
                         <Border Style="{StaticResource SoftCard}" Padding="16"><StackPanel><TextBlock Text="核对与保存" FontWeight="SemiBold" /><TextBlock Text="课程来源显示为导入、修改或手动；计入列使用绿色或灰色圆点表示是否参与计算。点击列标题可在升序、降序和默认顺序之间切换。" TextWrapping="Wrap" Opacity="0.72" Margin="0,5,0,0" /></StackPanel></Border>
-                        <Grid Margin="4,12,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="更详细的步骤与常见问题可查看完整用户指南。" TextWrapping="Wrap" Opacity="0.62" VerticalAlignment="Center" />
-                            <ui:Button Grid.Column="1" Content="用户指南" Appearance="Secondary" Click="OpenUserGuide_Click" Margin="12,0,0,0" />
-                        </Grid>
-                        <Grid Margin="4,14,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.ColumnSpan="2">
-                                <TextBlock x:Name="AppVersionTextBlock" Text="BUPT GPA Calculator" FontWeight="SemiBold" Opacity="0.72" />
-                                <TextBlock Text="lte_z · 小Z工作室#2026" Opacity="0.56" Margin="0,4,0,0" />
-                            </StackPanel>
-                            <TextBlock Grid.Row="1" Text="如果这个小工具帮到了你，欢迎点个 Star，也欢迎提交建议或参与贡献！" TextWrapping="Wrap" Opacity="0.56" Margin="0,10,0,0" VerticalAlignment="Bottom" />
-                            <ui:Button Grid.Row="1" Grid.Column="1" Content="GitHub 仓库" Appearance="Secondary" Click="OpenRepository_Click" VerticalAlignment="Bottom" Margin="16,0,0,0" />
-                        </Grid>
                     </StackPanel>
-                </ScrollViewer>
+
+                    <Grid Grid.Row="2" Margin="4,0,0,0" VerticalAlignment="Bottom">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.ColumnSpan="2">
+                            <TextBlock x:Name="AppVersionTextBlock" Text="BUPT GPA Calculator" FontWeight="SemiBold" Opacity="0.72" />
+                            <TextBlock Text="lte_z · 小Z工作室#2026" Opacity="0.56" Margin="0,4,0,0" />
+                        </StackPanel>
+                        <TextBlock Grid.Row="1" Text="如果这个小工具帮到了你，欢迎点个 Star，也欢迎提交建议或参与贡献！" TextWrapping="Wrap" Opacity="0.56" Margin="0,10,0,0" VerticalAlignment="Bottom" />
+                        <StackPanel Grid.RowSpan="2" Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Bottom">
+                            <ui:Button Content="用户指南" Appearance="Secondary" Click="OpenUserGuide_Click" HorizontalAlignment="Stretch" Margin="0,0,0,6" />
+                            <ui:Button Content="GitHub 仓库" Appearance="Secondary" Click="OpenRepository_Click" HorizontalAlignment="Stretch" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
             </Grid>
         </Grid>
 
