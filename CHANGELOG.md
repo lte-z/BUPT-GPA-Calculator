@@ -2,6 +2,17 @@
 
 本文件记录 BUPT GPA Calculator 面向用户的重要变化。
 
+## Unreleased
+
+### Fixed
+
+- 对齐成绩概览页上下卡片间距，使图表卡片与上方指标卡片边缘一致。
+
+### Known Issues
+
+- 新增学生并自动切换到新学生前，没有提示保存当前学生的未保存课程，可能导致未保存数据丢失。见 [#6](https://github.com/lte-z/BUPT-GPA-Calculator/issues/6)。
+- 打开包含较多数据的 `.db` 成绩档案时，界面可能短暂未响应，需要优化档案读取与界面刷新流程。见 [#7](https://github.com/lte-z/BUPT-GPA-Calculator/issues/7)。
+
 ## v0.1.0 - 2026-07-14
 
 - 初始化 WPF、核心逻辑与测试项目骨架；

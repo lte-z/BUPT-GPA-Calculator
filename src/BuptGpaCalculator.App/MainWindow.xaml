@@ -119,7 +119,7 @@
                             <Canvas x:Name="TrendCanvas" MinHeight="210" SizeChanged="ChartCanvas_SizeChanged" />
                         </DockPanel>
                     </Border>
-                    <Border Style="{StaticResource SoftCard}" Grid.Column="1" Padding="16" Margin="8,0,0,0">
+                    <Border Style="{StaticResource SoftCard}" Grid.Column="1" Padding="16">
                         <DockPanel>
                             <TextBlock DockPanel.Dock="Top" Text="成绩分布" FontWeight="SemiBold" Margin="0,0,0,8" />
                             <Canvas x:Name="DistributionCanvas" MinHeight="210" SizeChanged="ChartCanvas_SizeChanged" />
