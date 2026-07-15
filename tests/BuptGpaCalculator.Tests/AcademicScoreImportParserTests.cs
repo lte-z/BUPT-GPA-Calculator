@@ -33,8 +33,28 @@ public sealed class AcademicScoreImportParserTests
         var course = Assert.Single(result.Courses);
         Assert.Empty(result.Issues);
         Assert.Equal("SYN-2042", course.CourseCode);
-        Assert.Equal(95, course.Score);
+        Assert.Equal(95m, course.Score.Value);
         Assert.Equal(2.5m, course.Credit);
+    }
+
+    [Theory]
+    [InlineData("89.5", "89.5", 89.5)]
+    [InlineData("优", "优（95）", 95)]
+    [InlineData("通过", "通过（80）", 80)]
+    [InlineData("不通过", "不通过（59）", 59)]
+    public void Parse_WithOfficialScoreForms_ReadsScore(string scoreText, string expectedDisplay, double expectedValue)
+    {
+        var text = $"""
+            开课学期	课程名称	成绩	学分
+            2025-2026-1	课程甲	{scoreText}	3
+            """;
+
+        var result = AcademicScoreImportParser.Parse(text);
+
+        var course = Assert.Single(result.Courses);
+        Assert.Empty(result.Issues);
+        Assert.Equal(expectedDisplay, course.ScoreDisplayText);
+        Assert.Equal((decimal)expectedValue, course.Score.Value);
     }
 
     [Fact]
@@ -43,7 +63,7 @@ public sealed class AcademicScoreImportParserTests
         const string text = """
             开课学期	课程名称	成绩	学分
             2025-2026-1	课程甲	90	3
-            2025-2026-1	课程乙	缺考	2
+            2025-2026-1	课程乙	89.55	2
             2025-2027-1	课程丙	80	2
             """;
 

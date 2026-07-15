@@ -11,14 +11,26 @@ public sealed class GpaCalculatorTests
     [InlineData(98, 3.99)]
     [InlineData(93, 3.91)]
     [InlineData(92, 3.88)]
+    [InlineData(89.5, 3.79)]
     [InlineData(73, 2.63)]
+    [InlineData(71.5, 2.48)]
     [InlineData(60, 1.00)]
+    [InlineData(59.9, 0.00)]
     [InlineData(59, 0.00)]
-    public void GetGradePoint_UsesLegacyScale(int score, decimal expectedGradePoint)
+    public void GetGradePoint_UsesOfficialScale(double score, double expectedGradePoint)
     {
-        var gradePoint = GpaScale.GetGradePoint(score);
+        var gradePoint = GpaScale.GetGradePoint((decimal)score);
 
-        Assert.Equal(expectedGradePoint, gradePoint);
+        Assert.Equal((decimal)expectedGradePoint, gradePoint);
+    }
+
+    [Fact]
+    public void Rules_ExposeOfficialFourColumnLabels()
+    {
+        Assert.Equal(77, GpaScale.Rules.Count);
+        Assert.Contains(GpaScale.Rules, rule => rule.PercentageDisplayText == "小于 60.0" && rule.FiveLevelText == "不及格" && rule.TwoLevelText == "不通过" && rule.GradePoint == 0m);
+        Assert.Contains(GpaScale.Rules, rule => rule.MinimumScore == 95m && rule.FiveLevelText == "优" && rule.GradePointDisplayText == "3.95");
+        Assert.Contains(GpaScale.Rules, rule => rule.MinimumScore == 80m && rule.TwoLevelText == "通过");
     }
 
     [Fact]
@@ -59,6 +71,21 @@ public sealed class GpaCalculatorTests
     }
 
     [Fact]
+    public void Calculate_WithNamedScores_UsesEquivalentPercentageValues()
+    {
+        var term = AcademicTerm.Parse("2025-2026-1");
+        var result = GpaCalculator.Calculate(
+        [
+            CreateCourse(term, "A", "五级制课程", "优", 2m, true),
+            CreateCourse(term, "B", "两级制课程", "不通过", 1m, true),
+        ]);
+
+        Assert.Equal(3m, result.IncludedCredit);
+        Assert.Equal(83m, result.GradeAverage);
+        Assert.Equal(2.6333333333333333333333333333m, result.Gpa);
+    }
+
+    [Fact]
     public void Calculate_WithoutIncludedCredit_ReturnsEmptyAverages()
     {
         var result = GpaCalculator.Calculate(
@@ -80,4 +107,10 @@ public sealed class GpaCalculatorTests
         score,
         credit,
         isIncluded);
+
+    private static CourseRecord CreateCourse(AcademicTerm term, string code, string name, string score, decimal credit, bool isIncluded)
+    {
+        Assert.True(CourseScore.TryParse(score, out var parsed, out _));
+        return new CourseRecord(Guid.Empty, "test-student", term, code, name, parsed!, credit, isIncluded);
+    }
 }

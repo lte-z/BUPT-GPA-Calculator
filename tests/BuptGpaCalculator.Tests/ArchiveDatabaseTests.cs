@@ -98,6 +98,63 @@ public sealed class ArchiveDatabaseTests
         }
     }
 
+    [Fact]
+    public async Task OpenAsync_WithVersion3Archive_MigratesIntegerScores()
+    {
+        var databasePath = CreateTemporaryDatabasePath();
+        try
+        {
+            await CreateVersion3ArchiveAsync(databasePath);
+
+            var archive = await ArchiveDatabase.OpenAsync(databasePath);
+            var courses = await archive.GetCoursesAsync("test-student");
+
+            var course = Assert.Single(courses);
+            Assert.Equal("89", course.ScoreText);
+            Assert.Equal(ScoreKind.Percentage, course.ScoreKind);
+            Assert.Equal(89m, course.Score);
+
+            await archive.ReplaceCoursesAsync(
+                "test-student",
+                [CreateCourse("test-student", AcademicTerm.Parse("2025-2026-2"), "NEW", "新成绩课程", CourseScore.FromStored("优", ScoreKind.FiveLevel, 95m), 1m, true)]);
+
+            var savedCourse = Assert.Single(await archive.GetCoursesAsync("test-student"));
+            Assert.Equal("优", savedCourse.ScoreText);
+            Assert.Equal(ScoreKind.FiveLevel, savedCourse.ScoreKind);
+            Assert.Equal(95m, savedCourse.Score);
+            Assert.DoesNotContain("Score", await GetCourseColumnNamesAsync(databasePath));
+        }
+        finally
+        {
+            DeleteTemporaryDatabase(databasePath);
+        }
+    }
+
+    [Fact]
+    public async Task OpenAsync_WithPartiallyMigratedVersion4Archive_RemovesLegacyScoreColumn()
+    {
+        var databasePath = CreateTemporaryDatabasePath();
+        try
+        {
+            await CreatePartiallyMigratedVersion4ArchiveAsync(databasePath);
+
+            var archive = await ArchiveDatabase.OpenAsync(databasePath);
+            await archive.ReplaceCoursesAsync(
+                "test-student",
+                [CreateCourse("test-student", AcademicTerm.Parse("2025-2026-2"), "NEW", "新成绩课程", CourseScore.FromStored("优", ScoreKind.FiveLevel, 95m), 1m, true)]);
+
+            var savedCourse = Assert.Single(await archive.GetCoursesAsync("test-student"));
+            Assert.Equal("优", savedCourse.ScoreText);
+            Assert.Equal(ScoreKind.FiveLevel, savedCourse.ScoreKind);
+            Assert.Equal(95m, savedCourse.Score);
+            Assert.DoesNotContain("Score", await GetCourseColumnNamesAsync(databasePath));
+        }
+        finally
+        {
+            DeleteTemporaryDatabase(databasePath);
+        }
+    }
+
     private static CourseRecord CreateCourse(
         string studentId,
         AcademicTerm term,
@@ -108,7 +165,117 @@ public sealed class ArchiveDatabaseTests
         bool isIncluded,
         CourseSource source = CourseSource.Manual) => new(Guid.Empty, studentId, term, code, name, score, credit, isIncluded, source);
 
+    private static CourseRecord CreateCourse(
+        string studentId,
+        AcademicTerm term,
+        string code,
+        string name,
+        CourseScore score,
+        decimal credit,
+        bool isIncluded,
+        CourseSource source = CourseSource.Manual) => new(Guid.Empty, studentId, term, code, name, score, credit, isIncluded, source);
+
     private static string CreateTemporaryDatabasePath() => Path.Combine(Path.GetTempPath(), $"BuptGpaCalculator-{Guid.NewGuid():N}.db");
+
+    private static async Task CreateVersion3ArchiveAsync(string databasePath)
+    {
+        await using var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = databasePath, Pooling = false }.ToString());
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            CREATE TABLE ArchiveInfo (
+                Key TEXT NOT NULL PRIMARY KEY,
+                Value TEXT NOT NULL
+            );
+            CREATE TABLE Students (
+                StudentId TEXT NOT NULL PRIMARY KEY,
+                Name TEXT NOT NULL,
+                CreatedAtUtc TEXT NOT NULL,
+                UpdatedAtUtc TEXT NOT NULL
+            );
+            CREATE TABLE Courses (
+                Id TEXT NOT NULL PRIMARY KEY,
+                StudentId TEXT NOT NULL,
+                TermStartYear INTEGER NOT NULL,
+                TermNumber INTEGER NOT NULL,
+                CourseCode TEXT NULL,
+                CourseName TEXT NOT NULL,
+                Score INTEGER NOT NULL CHECK (Score BETWEEN 0 AND 100),
+                Credit TEXT NOT NULL,
+                IsIncluded INTEGER NOT NULL CHECK (IsIncluded IN (0, 1)),
+                Source INTEGER NOT NULL CHECK (Source IN (0, 1, 2)),
+                SortOrder INTEGER NOT NULL,
+                CreatedAtUtc TEXT NOT NULL,
+                UpdatedAtUtc TEXT NOT NULL
+            );
+            INSERT INTO ArchiveInfo (Key, Value) VALUES ('SchemaVersion', '3');
+            INSERT INTO Students (StudentId, Name, CreatedAtUtc, UpdatedAtUtc)
+            VALUES ('test-student', '测试用户', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');
+            INSERT INTO Courses (Id, StudentId, TermStartYear, TermNumber, CourseCode, CourseName, Score, Credit, IsIncluded, Source, SortOrder, CreatedAtUtc, UpdatedAtUtc)
+            VALUES ('00000000-0000-0000-0000-000000000001', 'test-student', 2025, 1, 'OLD', '旧档案课程', 89, '2', 1, 0, 0, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');
+            """;
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task CreatePartiallyMigratedVersion4ArchiveAsync(string databasePath)
+    {
+        await using var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = databasePath, Pooling = false }.ToString());
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            CREATE TABLE ArchiveInfo (
+                Key TEXT NOT NULL PRIMARY KEY,
+                Value TEXT NOT NULL
+            );
+            CREATE TABLE Students (
+                StudentId TEXT NOT NULL PRIMARY KEY,
+                Name TEXT NOT NULL,
+                CreatedAtUtc TEXT NOT NULL,
+                UpdatedAtUtc TEXT NOT NULL
+            );
+            CREATE TABLE Courses (
+                Id TEXT NOT NULL PRIMARY KEY,
+                StudentId TEXT NOT NULL,
+                TermStartYear INTEGER NOT NULL,
+                TermNumber INTEGER NOT NULL,
+                CourseCode TEXT NULL,
+                CourseName TEXT NOT NULL,
+                Score INTEGER NOT NULL CHECK (Score BETWEEN 0 AND 100),
+                Credit TEXT NOT NULL,
+                IsIncluded INTEGER NOT NULL CHECK (IsIncluded IN (0, 1)),
+                Source INTEGER NOT NULL CHECK (Source IN (0, 1, 2)),
+                SortOrder INTEGER NOT NULL,
+                CreatedAtUtc TEXT NOT NULL,
+                UpdatedAtUtc TEXT NOT NULL,
+                ScoreText TEXT NULL,
+                ScoreKind INTEGER NOT NULL DEFAULT 0,
+                ScoreValue TEXT NULL
+            );
+            INSERT INTO ArchiveInfo (Key, Value) VALUES ('SchemaVersion', '4');
+            INSERT INTO Students (StudentId, Name, CreatedAtUtc, UpdatedAtUtc)
+            VALUES ('test-student', '测试用户', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z');
+            INSERT INTO Courses (Id, StudentId, TermStartYear, TermNumber, CourseCode, CourseName, Score, Credit, IsIncluded, Source, SortOrder, CreatedAtUtc, UpdatedAtUtc, ScoreText, ScoreKind, ScoreValue)
+            VALUES ('00000000-0000-0000-0000-000000000001', 'test-student', 2025, 1, 'OLD', '旧档案课程', 89, '2', 1, 0, 0, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z', '89', 0, '89');
+            """;
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task<IReadOnlyCollection<string>> GetCourseColumnNamesAsync(string databasePath)
+    {
+        await using var connection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = databasePath, Pooling = false }.ToString());
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA table_info(Courses);";
+
+        var columns = new List<string>();
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            columns.Add(reader.GetString(1));
+        }
+
+        return columns;
+    }
 
     private static void DeleteTemporaryDatabase(string databasePath)
     {

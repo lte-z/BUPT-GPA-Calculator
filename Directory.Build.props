@@ -4,7 +4,7 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <AnalysisLevel>latest</AnalysisLevel>
         <Deterministic>true</Deterministic>
-        <VersionPrefix>0.1.0</VersionPrefix>
+        <VersionPrefix>0.1.1</VersionPrefix>
         <Authors>lte_z</Authors>
         <Company>小Z工作室#2026</Company>
         <Product>BUPT GPA Calculator</Product>

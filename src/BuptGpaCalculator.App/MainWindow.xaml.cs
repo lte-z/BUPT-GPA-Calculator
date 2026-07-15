@@ -296,6 +296,27 @@ public partial class MainWindow
     private void RulesNavigationButton_Click(object sender, RoutedEventArgs e) => SetPage(RulesPanel);
     private void HelpNavigationButton_Click(object sender, RoutedEventArgs e) => SetPage(HelpPanel);
 
+    private void DataGrid_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (sender is not DataGrid dataGrid
+            || FindVisualChild<ScrollViewer>(dataGrid) is not { } scrollViewer)
+        {
+            return;
+        }
+
+        var direction = e.Delta > 0 ? -1 : 1;
+        var rowStep = GetDataGridRowStep(dataGrid);
+        if (rowStep <= 0d)
+        {
+            rowStep = 32d;
+        }
+
+        var targetOffset = scrollViewer.VerticalOffset + direction * rowStep;
+        targetOffset = Math.Clamp(targetOffset, 0d, scrollViewer.ScrollableHeight);
+        scrollViewer.ScrollToVerticalOffset(targetOffset);
+        e.Handled = true;
+    }
+
     private async void OpenRepository_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -349,14 +370,35 @@ public partial class MainWindow
         await EditSelectedCourseAsync();
     }
 
+    private void ReadOnlyDataGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not DataGrid dataGrid
+            || FindVisualParent<System.Windows.Controls.Primitives.ScrollBar>(e.OriginalSource as DependencyObject) is not null)
+        {
+            return;
+        }
+
+        dataGrid.UnselectAll();
+        dataGrid.UnselectAllCells();
+        e.Handled = true;
+    }
+
     private async Task EditSelectedCourseAsync()
     {
-        if (CourseDataGrid.SelectedItem is not CourseRow selected)
+        var selectedRows = CourseDataGrid.SelectedItems.OfType<CourseRow>().ToList();
+        if (selectedRows.Count == 0)
         {
             await ShowInfoAsync("尚未选择课程", "请先在课程表中选择一门课程。");
             return;
         }
 
+        if (selectedRows.Count > 1)
+        {
+            await ShowInfoAsync("选择了多门课程", "编辑课程时请只选择一门课程。");
+            return;
+        }
+
+        var selected = selectedRows[0];
         var draft = CloneRow(selected);
         if (await ShowCourseDialogAsync(draft, "编辑课程") != true) return;
 
@@ -612,7 +654,8 @@ public partial class MainWindow
         if (!string.IsNullOrEmpty(search)
             && !row.CourseName.Contains(search, StringComparison.OrdinalIgnoreCase)
             && !row.CourseCode.Contains(search, StringComparison.OrdinalIgnoreCase)
-            && !row.Term.Contains(search, StringComparison.OrdinalIgnoreCase))
+            && !row.Term.Contains(search, StringComparison.OrdinalIgnoreCase)
+            && !row.ScoreDisplayText.Contains(search, StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
@@ -1007,7 +1050,12 @@ public partial class MainWindow
             termPanel.Children.Add(termInputsPanel);
             var codeBox = new TextBox { Text = row.CourseCode, PlaceholderText = "课程编号（可选）", Margin = new Thickness(0, 8, 0, 0) };
             var nameBox = new TextBox { Text = row.CourseName, PlaceholderText = "课程名称", Margin = new Thickness(0, 8, 0, 0) };
-            var scoreBox = new TextBox { Text = row.ScoreText, PlaceholderText = "成绩（0-100 整数）", Margin = new Thickness(0, 8, 0, 0) };
+            var scoreBox = new TextBox
+            {
+                Text = row.ScoreText,
+                PlaceholderText = "成绩（如 89.5、优、通过）",
+                Margin = new Thickness(0, 8, 0, 0),
+            };
             var creditBox = new TextBox { Text = row.CreditText, PlaceholderText = "学分（可为 0）", Margin = new Thickness(0, 8, 0, 0) };
             var includedBox = new CheckBox { Content = "计入 GPA 与 GA", IsChecked = row.IsIncluded, Margin = new Thickness(0, 12, 0, 0) };
             var panel = new StackPanel { Width = 420 };
@@ -1066,37 +1114,44 @@ public partial class MainWindow
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
                 TextWrapping = TextWrapping.NoWrap,
-                Height = 135,
+                Height = 132,
             };
             var instructionBlock = new TextBlock
             {
                 Text = "在成绩表格内点一下，按 Ctrl+A、Ctrl+C；回到这里点“识别成绩表”。也可以手动粘贴后再识别。",
                 TextWrapping = TextWrapping.Wrap,
                 Opacity = 0.72,
-                Margin = new Thickness(0, 0, 0, 8),
+                Margin = new Thickness(0, 0, 0, 6),
             };
             var summaryBlock = new TextBlock
             {
                 Text = "等待识别成绩表。",
                 TextWrapping = TextWrapping.Wrap,
                 Opacity = 0.72,
-                Margin = new Thickness(0, 8, 0, 8),
+                Margin = new Thickness(12, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
             };
             var previewGrid = new DataGrid
             {
                 AutoGenerateColumns = false,
                 CanUserAddRows = false,
+                Focusable = false,
                 IsReadOnly = true,
-                Height = 220,
+                Height = 164,
             };
+            previewGrid.SetValue(VirtualizingPanel.ScrollUnitProperty, ScrollUnit.Pixel);
+            previewGrid.PreviewMouseWheel += DataGrid_PreviewMouseWheel;
+            previewGrid.PreviewMouseLeftButtonDown += ReadOnlyDataGrid_PreviewMouseLeftButtonDown;
             previewGrid.Columns.Add(new DataGridTextColumn { Header = "原文行", Binding = new Binding(nameof(ImportedCourse.SourceLineNumber)), Width = 64 });
             previewGrid.Columns.Add(new DataGridTextColumn { Header = "学期", Binding = new Binding(nameof(ImportedCourse.Term)), Width = 108 });
             previewGrid.Columns.Add(new DataGridTextColumn { Header = "课程编号", Binding = new Binding(nameof(ImportedCourse.CourseCode)) { TargetNullValue = string.Empty }, Width = 112 });
             previewGrid.Columns.Add(new DataGridTextColumn { Header = "课程名称", Binding = new Binding(nameof(ImportedCourse.CourseName)), Width = new DataGridLength(1, DataGridLengthUnitType.Star) });
-            previewGrid.Columns.Add(new DataGridTextColumn { Header = "成绩", Binding = new Binding(nameof(ImportedCourse.Score)), Width = 62 });
-            previewGrid.Columns.Add(new DataGridTextColumn { Header = "学分", Binding = new Binding(nameof(ImportedCourse.Credit)) { StringFormat = "0.0##" }, Width = 62 });
-            var panel = new Grid { Width = 760 };
-            panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            previewGrid.Columns.Add(new DataGridTextColumn { Header = "成绩", Binding = new Binding(nameof(ImportedCourse.ScoreDisplayText)), Width = 76 });
+            previewGrid.Columns.Add(new DataGridTextColumn { Header = "学分", Binding = new Binding(nameof(ImportedCourse.Credit)) { StringFormat = "0.0" }, Width = 62 });
+            var panel = new Grid
+            {
+                Width = 740,
+            };
             panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             panel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -1107,17 +1162,22 @@ public partial class MainWindow
             Grid.SetRow(inputBox, 1);
             panel.Children.Add(inputBox);
 
-            var actions = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 10, 0, 10) };
+            var actions = new Grid { Margin = new Thickness(0, 8, 0, 8) };
+            actions.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            actions.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            var buttons = new StackPanel { Orientation = Orientation.Horizontal };
             var openButton = new Button { Content = "打开教务系统", Appearance = ControlAppearance.Secondary, Margin = new Thickness(0, 0, 6, 0) };
             var previewButton = new Button { Content = "识别成绩表", Appearance = ControlAppearance.Primary };
-            actions.Children.Add(openButton);
-            actions.Children.Add(previewButton);
+            buttons.Children.Add(openButton);
+            buttons.Children.Add(previewButton);
+            Grid.SetColumn(buttons, 0);
+            actions.Children.Add(buttons);
+            Grid.SetColumn(summaryBlock, 1);
+            actions.Children.Add(summaryBlock);
             Grid.SetRow(actions, 2);
             panel.Children.Add(actions);
 
-            Grid.SetRow(summaryBlock, 3);
-            panel.Children.Add(summaryBlock);
-            Grid.SetRow(previewGrid, 4);
+            Grid.SetRow(previewGrid, 3);
             panel.Children.Add(previewGrid);
 
             void Parse()
@@ -1240,7 +1300,7 @@ public partial class MainWindow
             version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3);
         }
 
-        return (version ?? "0.1.0").Split('+')[0];
+        return (version ?? "0.1.1").Split('+')[0];
     }
 
     private static string Format(decimal? value) => value?.ToString("0.0000", CultureInfo.InvariantCulture) ?? "—";
@@ -1259,6 +1319,61 @@ public partial class MainWindow
         }
 
         return null;
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject source)
+        where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(source); i++)
+        {
+            var child = VisualTreeHelper.GetChild(source, i);
+            if (child is T match)
+            {
+                return match;
+            }
+
+            if (FindVisualChild<T>(child) is { } descendant)
+            {
+                return descendant;
+            }
+        }
+
+        return null;
+    }
+
+    private static double GetDataGridRowStep(DataGrid dataGrid)
+    {
+        var rows = FindVisualChildren<DataGridRow>(dataGrid).Take(2).ToList();
+        if (rows.Count >= 2)
+        {
+            var firstTop = rows[0].TransformToAncestor(dataGrid).Transform(new Point(0, 0)).Y;
+            var secondTop = rows[1].TransformToAncestor(dataGrid).Transform(new Point(0, 0)).Y;
+            var visualStep = Math.Abs(secondTop - firstTop);
+            if (visualStep > 0d)
+            {
+                return visualStep;
+            }
+        }
+
+        return rows.FirstOrDefault()?.ActualHeight ?? 0d;
+    }
+
+    private static IEnumerable<T> FindVisualChildren<T>(DependencyObject source)
+        where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(source); i++)
+        {
+            var child = VisualTreeHelper.GetChild(source, i);
+            if (child is T match)
+            {
+                yield return match;
+            }
+
+            foreach (var descendant in FindVisualChildren<T>(child))
+            {
+                yield return descendant;
+            }
+        }
     }
 
     private static void Label(Canvas canvas, string text, double left, double top)
@@ -1280,7 +1395,7 @@ public partial class MainWindow
             var result = property switch
             {
                 "Term" => CompareTerm(left.Term, right.Term),
-                "ScoreText" => ParseInt(left.ScoreText).CompareTo(ParseInt(right.ScoreText)),
+                "ScoreValue" => left.ScoreValue.CompareTo(right.ScoreValue),
                 "CreditText" => ParseDecimal(left.CreditText).CompareTo(ParseDecimal(right.CreditText)),
                 "IsIncluded" => left.IsIncluded.CompareTo(right.IsIncluded),
                 "SourceLabel" => left.Source.CompareTo(right.Source),
@@ -1296,8 +1411,6 @@ public partial class MainWindow
             var hasRight = AcademicTerm.TryParse(right, out var rightTerm);
             return hasLeft && hasRight ? leftTerm.CompareTo(rightTerm) : StringComparer.CurrentCulture.Compare(left, right);
         }
-
-        private static int ParseInt(string value) => int.TryParse(value, out var number) ? number : int.MinValue;
 
         private static decimal ParseDecimal(string value)
             => decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var number) ? number : decimal.MinValue;

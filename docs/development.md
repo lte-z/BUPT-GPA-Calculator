@@ -33,4 +33,4 @@ dotnet publish src/BuptGpaCalculator.App/BuptGpaCalculator.App.csproj `
 
 ## 版本发布
 
-版本遵循 SemVer。推送 `v0.1.0` 形式的标签后，GitHub Actions 会构建并发布 Windows x64 产物。发布前必须更新 CHANGELOG，并确认 CI 通过。
+版本遵循 SemVer。推送 `vX.Y.Z` 形式的标签后，GitHub Actions 会构建并发布 Windows x64 产物。发布前必须更新 CHANGELOG，并确认 CI 通过。

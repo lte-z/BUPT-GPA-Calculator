@@ -1,6 +1,6 @@
 namespace BuptGpaCalculator.Core.Models;
 
-/// <summary>Represents one percentage-based course result belonging to a student.</summary>
+/// <summary>Represents one course result belonging to a student.</summary>
 public sealed record CourseRecord
 {
     /// <summary>Initializes a course record.</summary>
@@ -9,12 +9,28 @@ public sealed record CourseRecord
     /// <param name="term">The academic term in which the course was taken.</param>
     /// <param name="courseCode">The optional course code.</param>
     /// <param name="courseName">The course name.</param>
-    /// <param name="score">The integer score from 0 through 100.</param>
+    /// <param name="score">The numeric percentage score from 0 through 100.</param>
     /// <param name="credit">The non-negative course credit.</param>
     /// <param name="isIncluded">Whether the course contributes to GPA and GA.</param>
     /// <param name="source">Where the course information came from.</param>
     /// <param name="sortOrder">The stable order used by the default course list.</param>
-    public CourseRecord(Guid id, string studentId, AcademicTerm term, string? courseCode, string courseName, int score, decimal credit, bool isIncluded, CourseSource source = CourseSource.Manual, int sortOrder = 0)
+    public CourseRecord(Guid id, string studentId, AcademicTerm term, string? courseCode, string courseName, decimal score, decimal credit, bool isIncluded, CourseSource source = CourseSource.Manual, int sortOrder = 0)
+        : this(id, studentId, term, courseCode, courseName, CourseScore.FromPercentage(score), credit, isIncluded, source, sortOrder)
+    {
+    }
+
+    /// <summary>Initializes a course record.</summary>
+    /// <param name="id">The internal course identifier. An empty value creates a new identifier.</param>
+    /// <param name="studentId">The student number that owns the course.</param>
+    /// <param name="term">The academic term in which the course was taken.</param>
+    /// <param name="courseCode">The optional course code.</param>
+    /// <param name="courseName">The course name.</param>
+    /// <param name="score">The original score and its equivalent percentage value.</param>
+    /// <param name="credit">The non-negative course credit.</param>
+    /// <param name="isIncluded">Whether the course contributes to GPA and GA.</param>
+    /// <param name="source">Where the course information came from.</param>
+    /// <param name="sortOrder">The stable order used by the default course list.</param>
+    public CourseRecord(Guid id, string studentId, AcademicTerm term, string? courseCode, string courseName, CourseScore score, decimal credit, bool isIncluded, CourseSource source = CourseSource.Manual, int sortOrder = 0)
     {
         if (string.IsNullOrWhiteSpace(studentId))
         {
@@ -22,15 +38,11 @@ public sealed record CourseRecord
         }
 
         ArgumentNullException.ThrowIfNull(term);
+        ArgumentNullException.ThrowIfNull(score);
 
         if (string.IsNullOrWhiteSpace(courseName))
         {
             throw new ArgumentException("课程名称不能为空。", nameof(courseName));
-        }
-
-        if (score is < 0 or > 100)
-        {
-            throw new ArgumentOutOfRangeException(nameof(score), "成绩必须为 0 至 100 的整数。");
         }
 
         if (credit < 0)
@@ -43,7 +55,7 @@ public sealed record CourseRecord
         Term = term;
         CourseCode = string.IsNullOrWhiteSpace(courseCode) ? null : courseCode.Trim();
         CourseName = courseName.Trim();
-        Score = score;
+        CourseScore = score;
         Credit = credit;
         IsIncluded = isIncluded;
         Source = source;
@@ -65,8 +77,20 @@ public sealed record CourseRecord
     /// <summary>Gets the course name.</summary>
     public string CourseName { get; }
 
-    /// <summary>Gets the percentage score.</summary>
-    public int Score { get; }
+    /// <summary>Gets the original score and its equivalent percentage value.</summary>
+    public CourseScore CourseScore { get; }
+
+    /// <summary>Gets the equivalent percentage score used in calculation.</summary>
+    public decimal Score => CourseScore.Value;
+
+    /// <summary>Gets the normalized raw score text.</summary>
+    public string ScoreText => CourseScore.Text;
+
+    /// <summary>Gets the original score kind.</summary>
+    public ScoreKind ScoreKind => CourseScore.Kind;
+
+    /// <summary>Gets the score text shown to users.</summary>
+    public string ScoreDisplayText => CourseScore.DisplayText;
 
     /// <summary>Gets the course credit.</summary>
     public decimal Credit { get; }
