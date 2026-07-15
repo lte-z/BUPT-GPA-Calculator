@@ -2,7 +2,7 @@
 
 本文件记录 BUPT GPA Calculator 面向用户的重要变化。
 
-## Unreleased
+## v0.1.1 - 2026-07-15
 
 ### Fixed
 
