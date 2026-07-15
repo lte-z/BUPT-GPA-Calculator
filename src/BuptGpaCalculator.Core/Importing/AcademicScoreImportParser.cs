@@ -105,10 +105,9 @@ public static class AcademicScoreImportParser
             return false;
         }
 
-        if (!int.TryParse(GetCell(cells, headerMap["成绩"]), NumberStyles.None, CultureInfo.InvariantCulture, out var score)
-            || score is < 0 or > 100)
+        if (!CourseScore.TryParse(GetCell(cells, headerMap["成绩"]), out var score, out var scoreError))
         {
-            issue = new ImportIssue(lineNumber, "成绩必须为 0 至 100 的整数。");
+            issue = new ImportIssue(lineNumber, scoreError ?? "成绩格式无效。");
             return false;
         }
 
@@ -130,7 +129,7 @@ public static class AcademicScoreImportParser
             term,
             string.IsNullOrWhiteSpace(courseCode) ? null : courseCode.Trim(),
             courseName.Trim(),
-            score,
+            score!,
             credit,
             lineNumber);
         return true;

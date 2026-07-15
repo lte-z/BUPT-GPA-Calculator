@@ -7,7 +7,9 @@
 ### Fixed
 
 - 对齐成绩概览页上下卡片间距，使图表卡片与上方指标卡片边缘一致。
+- 优化课程表和只读表格的选择行为，避免多选后误编辑课程，并减少无意义选中与横向滚动条干扰。
 - 新增学生前会先处理当前学生的未保存修改，避免自动切换到新学生时丢失未保存课程。见 [#6](https://github.com/lte-z/BUPT-GPA-Calculator/issues/6)。
+- 支持官方小数百分制、五级制和两级制成绩，补全绩点换算规则并迁移旧版整数成绩档案。见 [#9](https://github.com/lte-z/BUPT-GPA-Calculator/issues/9)。
 
 ### Known Issues
 

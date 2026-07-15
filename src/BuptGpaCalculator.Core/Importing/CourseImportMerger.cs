@@ -93,7 +93,7 @@ public static class CourseImportMerger
             ? string.Equals(Normalize(course.CourseCode), Normalize(imported.CourseCode), StringComparison.Ordinal)
             : string.Equals(course.CourseName, imported.CourseName, StringComparison.Ordinal));
 
-    private static CourseRecord CopyWithOrder(CourseRecord course, int sortOrder) => new(course.Id, course.StudentId, course.Term, course.CourseCode, course.CourseName, course.Score, course.Credit, course.IsIncluded, course.Source, sortOrder);
+    private static CourseRecord CopyWithOrder(CourseRecord course, int sortOrder) => new(course.Id, course.StudentId, course.Term, course.CourseCode, course.CourseName, course.CourseScore, course.Credit, course.IsIncluded, course.Source, sortOrder);
 
     private static string Normalize(string? code) => code?.Trim() ?? string.Empty;
 }

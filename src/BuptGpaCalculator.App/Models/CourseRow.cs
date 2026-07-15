@@ -55,6 +55,12 @@ public sealed class CourseRow : INotifyPropertyChanged
     /// <summary>Gets or sets the score text.</summary>
     public string ScoreText { get => scoreText; set => SetField(ref scoreText, value ?? string.Empty); }
 
+    /// <summary>Gets the score display text shown in the course table.</summary>
+    public string ScoreDisplayText => CourseScore.TryParse(ScoreText, out var score, out _) ? score!.DisplayText : ScoreText;
+
+    /// <summary>Gets the equivalent percentage score used for sorting.</summary>
+    public decimal ScoreValue => CourseScore.TryParse(ScoreText, out var score, out _) ? score!.Value : decimal.MinValue;
+
     /// <summary>Gets or sets the credit text.</summary>
     public string CreditText { get => creditText; set => SetField(ref creditText, value ?? string.Empty); }
 
@@ -94,7 +100,7 @@ public sealed class CourseRow : INotifyPropertyChanged
         course.Term.ToString(),
         course.CourseCode ?? string.Empty,
         course.CourseName,
-        course.Score.ToString(CultureInfo.InvariantCulture),
+        course.ScoreText,
         course.Credit.ToString(CultureInfo.InvariantCulture),
         course.IsIncluded,
         course.Source,
@@ -115,9 +121,9 @@ public sealed class CourseRow : INotifyPropertyChanged
             return false;
         }
 
-        if (!int.TryParse(ScoreText, NumberStyles.None, CultureInfo.InvariantCulture, out var score) || score is < 0 or > 100)
+        if (!CourseScore.TryParse(ScoreText, out var score, out var scoreError))
         {
-            errorMessage = "成绩必须为 0 至 100 的整数。";
+            errorMessage = scoreError;
             return false;
         }
 
@@ -129,7 +135,7 @@ public sealed class CourseRow : INotifyPropertyChanged
 
         try
         {
-            course = new CourseRecord(Id, studentId, academicTerm, CourseCode, CourseName, score, credit, IsIncluded, Source, SortOrder);
+            course = new CourseRecord(Id, studentId, academicTerm, CourseCode, CourseName, score!, credit, IsIncluded, Source, SortOrder);
             return true;
         }
         catch (ArgumentException exception)
@@ -151,6 +157,12 @@ public sealed class CourseRow : INotifyPropertyChanged
         if (propertyName == nameof(IsIncluded))
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IncludedToolTip)));
+        }
+
+        if (propertyName == nameof(ScoreText))
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ScoreDisplayText)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ScoreValue)));
         }
 
         if (propertyName == nameof(Source))

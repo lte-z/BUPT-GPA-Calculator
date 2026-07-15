@@ -83,5 +83,5 @@ public sealed class CourseImportMergerTests
     }
 
     private static CourseRecord Course(string code, string name, AcademicTerm term, int order) => new(Guid.NewGuid(), "20420001", term, code, name, 80, 2m, true, CourseSource.AcademicSystem, order);
-    private static ImportedCourse Imported(string code, string name, AcademicTerm term, int score) => new(term, code, name, score, 2m, 1);
+    private static ImportedCourse Imported(string code, string name, AcademicTerm term, int score) => new(term, code, name, CourseScore.FromPercentage(score), 2m, 1);
 }

@@ -7,7 +7,7 @@ namespace BuptGpaCalculator.Core.Persistence;
 /// <summary>Provides access to one local SQLite archive file.</summary>
 public sealed class ArchiveDatabase
 {
-    private const int CurrentSchemaVersion = 3;
+    private const int CurrentSchemaVersion = 4;
     private readonly string connectionString;
 
     private ArchiveDatabase(string databasePath)
@@ -121,7 +121,7 @@ public sealed class ArchiveDatabase
         await using var connection = await OpenConnectionAsync(cancellationToken);
         await using var command = connection.CreateCommand();
         command.CommandText = """
-            SELECT Id, StudentId, TermStartYear, TermNumber, CourseCode, CourseName, Score, Credit, IsIncluded, Source, SortOrder
+            SELECT Id, StudentId, TermStartYear, TermNumber, CourseCode, CourseName, ScoreText, ScoreKind, ScoreValue, Credit, IsIncluded, Source, SortOrder
             FROM Courses
             WHERE StudentId = $studentId
             ORDER BY TermStartYear, TermNumber, SortOrder, Id;
@@ -138,11 +138,14 @@ public sealed class ArchiveDatabase
                 new AcademicTerm(reader.GetInt32(2), reader.GetInt32(3)),
                 reader.IsDBNull(4) ? null : reader.GetString(4),
                 reader.GetString(5),
-                reader.GetInt32(6),
-                decimal.Parse(reader.GetString(7), CultureInfo.InvariantCulture),
-                reader.GetInt64(8) == 1,
-                (CourseSource)reader.GetInt32(9),
-                reader.GetInt32(10)));
+                CourseScore.FromStored(
+                    reader.GetString(6),
+                    (ScoreKind)reader.GetInt32(7),
+                    decimal.Parse(reader.GetString(8), CultureInfo.InvariantCulture)),
+                decimal.Parse(reader.GetString(9), CultureInfo.InvariantCulture),
+                reader.GetInt64(10) == 1,
+                (CourseSource)reader.GetInt32(11),
+                reader.GetInt32(12)));
         }
 
         return courses;
@@ -226,7 +229,9 @@ public sealed class ArchiveDatabase
                 TermNumber INTEGER NOT NULL,
                 CourseCode TEXT NULL,
                 CourseName TEXT NOT NULL,
-                Score INTEGER NOT NULL CHECK (Score BETWEEN 0 AND 100),
+                ScoreText TEXT NOT NULL,
+                ScoreKind INTEGER NOT NULL CHECK (ScoreKind IN (0, 1, 2)),
+                ScoreValue TEXT NOT NULL,
                 Credit TEXT NOT NULL,
                 IsIncluded INTEGER NOT NULL CHECK (IsIncluded IN (0, 1)),
                 Source INTEGER NOT NULL CHECK (Source IN (0, 1, 2)),
@@ -238,7 +243,7 @@ public sealed class ArchiveDatabase
             CREATE UNIQUE INDEX IF NOT EXISTS IX_Courses_Student_Term_Code
                 ON Courses (StudentId, TermStartYear, TermNumber, CourseCode)
                 WHERE CourseCode IS NOT NULL;
-            INSERT OR IGNORE INTO ArchiveInfo (Key, Value) VALUES ('SchemaVersion', '3');
+            INSERT OR IGNORE INTO ArchiveInfo (Key, Value) VALUES ('SchemaVersion', '4');
             """;
         await command.ExecuteNonQueryAsync(cancellationToken);
 
@@ -247,13 +252,114 @@ public sealed class ArchiveDatabase
         var versionText = (string?)await versionCommand.ExecuteScalarAsync(cancellationToken);
         if (!int.TryParse(versionText, NumberStyles.None, CultureInfo.InvariantCulture, out var version))
         {
-            throw new InvalidDataException("该成绩档案来自早期原型或更新版本，无法由当前版本打开。请新建一个档案后重新导入成绩。");
+            throw new InvalidDataException("该成绩档案来自早期版本或更新版本，无法由当前版本打开。请新建一个档案后重新导入成绩。");
+        }
+
+        if (version == 3)
+        {
+            await MigrateFromVersion3Async(connection, cancellationToken);
+            version = CurrentSchemaVersion;
         }
 
         if (version != CurrentSchemaVersion)
         {
-            throw new InvalidDataException("该成绩档案来自早期原型或更新版本，无法由当前版本打开。请新建一个档案后重新导入成绩。");
+            throw new InvalidDataException("该成绩档案来自早期版本或更新版本，无法由当前版本打开。请新建一个档案后重新导入成绩。");
         }
+
+        await RepairCoursesSchemaAsync(connection, cancellationToken);
+    }
+
+    private static async Task MigrateFromVersion3Async(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        await RebuildCoursesTableAsync(connection, cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE ArchiveInfo SET Value = '4' WHERE Key = 'SchemaVersion';
+            """;
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static async Task RepairCoursesSchemaAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        var columns = await GetCoursesColumnsAsync(connection, cancellationToken);
+        if (columns.Contains("Score")
+            || !columns.Contains("ScoreText")
+            || !columns.Contains("ScoreKind")
+            || !columns.Contains("ScoreValue"))
+        {
+            await RebuildCoursesTableAsync(connection, cancellationToken);
+        }
+    }
+
+    private static async Task<HashSet<string>> GetCoursesColumnsAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA table_info(Courses);";
+
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            columns.Add(reader.GetString(1));
+        }
+
+        return columns;
+    }
+
+    private static async Task RebuildCoursesTableAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        var columns = await GetCoursesColumnsAsync(connection, cancellationToken);
+        var hasScoreText = columns.Contains("ScoreText");
+        var hasScoreKind = columns.Contains("ScoreKind");
+        var hasScoreValue = columns.Contains("ScoreValue");
+        var hasLegacyScore = columns.Contains("Score");
+
+        var scoreTextExpression = hasScoreText
+            ? hasLegacyScore ? "COALESCE(ScoreText, CAST(Score AS TEXT))" : "ScoreText"
+            : "CAST(Score AS TEXT)";
+        var scoreKindExpression = hasScoreKind ? "ScoreKind" : "0";
+        var scoreValueExpression = hasScoreValue
+            ? hasLegacyScore ? "COALESCE(ScoreValue, CAST(Score AS TEXT))" : "ScoreValue"
+            : "CAST(Score AS TEXT)";
+
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = $"""
+            DROP INDEX IF EXISTS IX_Courses_Student_Term_Code;
+            DROP TABLE IF EXISTS Courses_New;
+            CREATE TABLE Courses_New (
+                Id TEXT NOT NULL PRIMARY KEY,
+                StudentId TEXT NOT NULL,
+                TermStartYear INTEGER NOT NULL,
+                TermNumber INTEGER NOT NULL,
+                CourseCode TEXT NULL,
+                CourseName TEXT NOT NULL,
+                ScoreText TEXT NOT NULL,
+                ScoreKind INTEGER NOT NULL CHECK (ScoreKind IN (0, 1, 2)),
+                ScoreValue TEXT NOT NULL,
+                Credit TEXT NOT NULL,
+                IsIncluded INTEGER NOT NULL CHECK (IsIncluded IN (0, 1)),
+                Source INTEGER NOT NULL CHECK (Source IN (0, 1, 2)),
+                SortOrder INTEGER NOT NULL,
+                CreatedAtUtc TEXT NOT NULL,
+                UpdatedAtUtc TEXT NOT NULL,
+                FOREIGN KEY (StudentId) REFERENCES Students (StudentId) ON DELETE CASCADE
+            );
+            INSERT INTO Courses_New (
+                Id, StudentId, TermStartYear, TermNumber, CourseCode, CourseName, ScoreText, ScoreKind, ScoreValue, Credit, IsIncluded, Source, SortOrder, CreatedAtUtc, UpdatedAtUtc)
+            SELECT
+                Id, StudentId, TermStartYear, TermNumber, CourseCode, CourseName, {scoreTextExpression}, {scoreKindExpression}, {scoreValueExpression}, Credit, IsIncluded, Source, SortOrder, CreatedAtUtc, UpdatedAtUtc
+            FROM Courses;
+            DROP TABLE Courses;
+            ALTER TABLE Courses_New RENAME TO Courses;
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_Courses_Student_Term_Code
+                ON Courses (StudentId, TermStartYear, TermNumber, CourseCode)
+                WHERE CourseCode IS NOT NULL;
+            """;
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     private async Task<SqliteConnection> OpenConnectionAsync(CancellationToken cancellationToken)
@@ -274,9 +380,9 @@ public sealed class ArchiveDatabase
         command.Transaction = transaction;
         command.CommandText = """
             INSERT INTO Courses (
-                Id, StudentId, TermStartYear, TermNumber, CourseCode, CourseName, Score, Credit, IsIncluded, Source, SortOrder, CreatedAtUtc, UpdatedAtUtc)
+                Id, StudentId, TermStartYear, TermNumber, CourseCode, CourseName, ScoreText, ScoreKind, ScoreValue, Credit, IsIncluded, Source, SortOrder, CreatedAtUtc, UpdatedAtUtc)
             VALUES (
-                $id, $studentId, $termStartYear, $termNumber, $courseCode, $courseName, $score, $credit, $isIncluded, $source, $sortOrder, $now, $now);
+                $id, $studentId, $termStartYear, $termNumber, $courseCode, $courseName, $scoreText, $scoreKind, $scoreValue, $credit, $isIncluded, $source, $sortOrder, $now, $now);
             """;
         command.Parameters.AddWithValue("$id", course.Id.ToString("D"));
         command.Parameters.AddWithValue("$studentId", course.StudentId);
@@ -284,7 +390,9 @@ public sealed class ArchiveDatabase
         command.Parameters.AddWithValue("$termNumber", course.Term.TermNumber);
         command.Parameters.AddWithValue("$courseCode", (object?)course.CourseCode ?? DBNull.Value);
         command.Parameters.AddWithValue("$courseName", course.CourseName);
-        command.Parameters.AddWithValue("$score", course.Score);
+        command.Parameters.AddWithValue("$scoreText", course.ScoreText);
+        command.Parameters.AddWithValue("$scoreKind", (int)course.ScoreKind);
+        command.Parameters.AddWithValue("$scoreValue", course.Score.ToString(CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("$credit", course.Credit.ToString(CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("$isIncluded", course.IsIncluded ? 1 : 0);
         command.Parameters.AddWithValue("$source", (int)course.Source);

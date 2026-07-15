@@ -173,6 +173,9 @@
                               CanUserAddRows="False"
                               IsReadOnly="True"
                               SelectionMode="Extended"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VirtualizingPanel.ScrollUnit="Pixel"
+                              PreviewMouseWheel="DataGrid_PreviewMouseWheel"
                               MouseDoubleClick="CourseDataGrid_MouseDoubleClick"
                               Sorting="CourseDataGrid_Sorting"
                               HeadersVisibility="Column"
@@ -181,7 +184,7 @@
                             <DataGridTextColumn Header="学期" Binding="{Binding Term}" SortMemberPath="Term" Width="120" />
                             <DataGridTextColumn Header="课程编号" Binding="{Binding CourseCode}" SortMemberPath="CourseCode" Width="125" />
                             <DataGridTextColumn Header="课程名称" Binding="{Binding CourseName}" SortMemberPath="CourseName" Width="*" MinWidth="200" />
-                            <DataGridTextColumn Header="成绩" Binding="{Binding ScoreText}" SortMemberPath="ScoreText" Width="76" />
+                            <DataGridTextColumn Header="成绩" Binding="{Binding ScoreDisplayText}" SortMemberPath="ScoreValue" Width="96" />
                             <DataGridTextColumn Header="学分" Binding="{Binding CreditText}" SortMemberPath="CreditText" Width="76" />
                             <DataGridTemplateColumn Header="计入" SortMemberPath="IsIncluded" Width="48">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -229,22 +232,24 @@
                 </Grid.RowDefinitions>
                 <StackPanel Grid.Row="0" Margin="0,0,0,10">
                     <TextBlock Text="计算规则" FontSize="24" FontWeight="SemiBold" />
-                    <TextBlock Text="百分制成绩按北邮绩点与加权平均分口径换算；0 学分或标记为不计入的课程不会影响 GPA 与 GA。" TextWrapping="Wrap" Opacity="0.66" Margin="0,3,0,0" />
+                    <TextBlock Text="百分制、五级制和两级制成绩按北邮官方表换算；0 学分或标记为不计入的课程不会影响 GPA 与 GA。" TextWrapping="Wrap" Opacity="0.66" Margin="0,3,0,0" />
                 </StackPanel>
-                <DataGrid x:Name="RuleDataGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" Margin="0,0,0,14">
+                <DataGrid x:Name="RuleDataGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" Margin="0,0,0,14" Focusable="False" HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.ScrollUnit="Pixel" PreviewMouseWheel="DataGrid_PreviewMouseWheel" PreviewMouseLeftButtonDown="ReadOnlyDataGrid_PreviewMouseLeftButtonDown">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="成绩下限（含）" Binding="{Binding MinimumScore}" Width="*" />
-                        <DataGridTextColumn Header="对应绩点" Binding="{Binding GradePoint, StringFormat={}{0:0.0000}}" Width="*" />
+                        <DataGridTextColumn Header="百分制成绩" Binding="{Binding PercentageDisplayText}" Width="*" />
+                        <DataGridTextColumn Header="五级制成绩" Binding="{Binding FiveLevelText}" Width="*" />
+                        <DataGridTextColumn Header="两级制成绩" Binding="{Binding TwoLevelText}" Width="*" />
+                        <DataGridTextColumn Header="绩点成绩" Binding="{Binding GradePointDisplayText}" Width="*" />
                     </DataGrid.Columns>
                 </DataGrid>
                 <TextBlock Grid.Row="2" Text="当前计算明细" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8" />
                 <Grid Grid.Row="3">
-                    <DataGrid x:Name="CalculationDataGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
+                    <DataGrid x:Name="CalculationDataGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" Focusable="False" HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.ScrollUnit="Pixel" PreviewMouseWheel="DataGrid_PreviewMouseWheel" PreviewMouseLeftButtonDown="ReadOnlyDataGrid_PreviewMouseLeftButtonDown">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="课程" Binding="{Binding CourseName}" Width="*" />
-                            <DataGridTextColumn Header="成绩" Binding="{Binding Score}" Width="70" />
-                            <DataGridTextColumn Header="学分" Binding="{Binding Credit}" Width="88" />
-                            <DataGridTextColumn Header="绩点" Binding="{Binding GradePoint}" Width="88" />
+                            <DataGridTextColumn Header="成绩" Binding="{Binding Score}" Width="104" />
+                            <DataGridTextColumn Header="学分" Binding="{Binding Credit}" Width="72" />
+                            <DataGridTextColumn Header="绩点" Binding="{Binding GradePoint}" Width="72" />
                             <DataGridTextColumn Header="GA 贡献" Binding="{Binding GradeAverageWeight}" Width="100" />
                             <DataGridTextColumn Header="GPA 贡献" Binding="{Binding GpaWeight}" Width="100" />
                             <DataGridTemplateColumn Header="计入" Width="54">
