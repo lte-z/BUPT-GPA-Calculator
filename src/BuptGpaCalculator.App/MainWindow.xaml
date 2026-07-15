@@ -174,7 +174,6 @@
                               IsReadOnly="True"
                               SelectionMode="Extended"
                               HorizontalScrollBarVisibility="Disabled"
-                              VirtualizingPanel.ScrollUnit="Pixel"
                               PreviewMouseWheel="DataGrid_PreviewMouseWheel"
                               MouseDoubleClick="CourseDataGrid_MouseDoubleClick"
                               Sorting="CourseDataGrid_Sorting"
@@ -234,7 +233,7 @@
                     <TextBlock Text="计算规则" FontSize="24" FontWeight="SemiBold" />
                     <TextBlock Text="百分制、五级制和两级制成绩按北邮官方表换算；0 学分或标记为不计入的课程不会影响 GPA 与 GA。" TextWrapping="Wrap" Opacity="0.66" Margin="0,3,0,0" />
                 </StackPanel>
-                <DataGrid x:Name="RuleDataGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" Margin="0,0,0,14" Focusable="False" HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.ScrollUnit="Pixel" PreviewMouseWheel="DataGrid_PreviewMouseWheel" PreviewMouseLeftButtonDown="ReadOnlyDataGrid_PreviewMouseLeftButtonDown">
+                <DataGrid x:Name="RuleDataGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" Margin="0,0,0,14" Focusable="False" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="DataGrid_PreviewMouseWheel" PreviewMouseLeftButtonDown="ReadOnlyDataGrid_PreviewMouseLeftButtonDown">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="百分制成绩" Binding="{Binding PercentageDisplayText}" Width="*" />
                         <DataGridTextColumn Header="五级制成绩" Binding="{Binding FiveLevelText}" Width="*" />
@@ -244,7 +243,7 @@
                 </DataGrid>
                 <TextBlock Grid.Row="2" Text="当前计算明细" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8" />
                 <Grid Grid.Row="3">
-                    <DataGrid x:Name="CalculationDataGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" Focusable="False" HorizontalScrollBarVisibility="Disabled" VirtualizingPanel.ScrollUnit="Pixel" PreviewMouseWheel="DataGrid_PreviewMouseWheel" PreviewMouseLeftButtonDown="ReadOnlyDataGrid_PreviewMouseLeftButtonDown">
+                    <DataGrid x:Name="CalculationDataGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" Focusable="False" HorizontalScrollBarVisibility="Disabled" PreviewMouseWheel="DataGrid_PreviewMouseWheel" PreviewMouseLeftButtonDown="ReadOnlyDataGrid_PreviewMouseLeftButtonDown">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="课程" Binding="{Binding CourseName}" Width="*" />
                             <DataGridTextColumn Header="成绩" Binding="{Binding Score}" Width="104" />

@@ -304,16 +304,15 @@ public partial class MainWindow
             return;
         }
 
-        var direction = e.Delta > 0 ? -1 : 1;
-        var rowStep = GetDataGridRowStep(dataGrid);
-        if (rowStep <= 0d)
+        if (e.Delta > 0)
         {
-            rowStep = 32d;
+            scrollViewer.LineUp();
+        }
+        else
+        {
+            scrollViewer.LineDown();
         }
 
-        var targetOffset = scrollViewer.VerticalOffset + direction * rowStep;
-        targetOffset = Math.Clamp(targetOffset, 0d, scrollViewer.ScrollableHeight);
-        scrollViewer.ScrollToVerticalOffset(targetOffset);
         e.Handled = true;
     }
 
@@ -1139,9 +1138,8 @@ public partial class MainWindow
                 IsReadOnly = true,
                 Height = 164,
             };
-            previewGrid.SetValue(VirtualizingPanel.ScrollUnitProperty, ScrollUnit.Pixel);
-            previewGrid.PreviewMouseWheel += DataGrid_PreviewMouseWheel;
             previewGrid.PreviewMouseLeftButtonDown += ReadOnlyDataGrid_PreviewMouseLeftButtonDown;
+            previewGrid.PreviewMouseWheel += DataGrid_PreviewMouseWheel;
             previewGrid.Columns.Add(new DataGridTextColumn { Header = "原文行", Binding = new Binding(nameof(ImportedCourse.SourceLineNumber)), Width = 64 });
             previewGrid.Columns.Add(new DataGridTextColumn { Header = "学期", Binding = new Binding(nameof(ImportedCourse.Term)), Width = 108 });
             previewGrid.Columns.Add(new DataGridTextColumn { Header = "课程编号", Binding = new Binding(nameof(ImportedCourse.CourseCode)) { TargetNullValue = string.Empty }, Width = 112 });
@@ -1339,41 +1337,6 @@ public partial class MainWindow
         }
 
         return null;
-    }
-
-    private static double GetDataGridRowStep(DataGrid dataGrid)
-    {
-        var rows = FindVisualChildren<DataGridRow>(dataGrid).Take(2).ToList();
-        if (rows.Count >= 2)
-        {
-            var firstTop = rows[0].TransformToAncestor(dataGrid).Transform(new Point(0, 0)).Y;
-            var secondTop = rows[1].TransformToAncestor(dataGrid).Transform(new Point(0, 0)).Y;
-            var visualStep = Math.Abs(secondTop - firstTop);
-            if (visualStep > 0d)
-            {
-                return visualStep;
-            }
-        }
-
-        return rows.FirstOrDefault()?.ActualHeight ?? 0d;
-    }
-
-    private static IEnumerable<T> FindVisualChildren<T>(DependencyObject source)
-        where T : DependencyObject
-    {
-        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(source); i++)
-        {
-            var child = VisualTreeHelper.GetChild(source, i);
-            if (child is T match)
-            {
-                yield return match;
-            }
-
-            foreach (var descendant in FindVisualChildren<T>(child))
-            {
-                yield return descendant;
-            }
-        }
     }
 
     private static void Label(Canvas canvas, string text, double left, double top)
