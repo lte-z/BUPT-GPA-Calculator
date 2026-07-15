@@ -6,23 +6,28 @@ namespace BuptGpaCalculator.Tests;
 public sealed class GpaCalculatorTests
 {
     [Theory]
-    [InlineData(100, 4.00)]
-    [InlineData(99, 4.00)]
-    [InlineData(98, 3.99)]
-    [InlineData(93, 3.91)]
-    [InlineData(92, 3.88)]
-    [InlineData(89.5, 3.79)]
-    [InlineData(73, 2.63)]
-    [InlineData(71.5, 2.48)]
-    [InlineData(60, 1.00)]
-    [InlineData(59.9, 0.00)]
-    [InlineData(59, 0.00)]
-    public void GetGradePoint_UsesOfficialScale(double score, double expectedGradePoint)
+    [MemberData(nameof(OfficialScaleCases))]
+    public void GetGradePoint_UsesOfficialScale(decimal score, decimal expectedGradePoint)
     {
-        var gradePoint = GpaScale.GetGradePoint((decimal)score);
+        var gradePoint = GpaScale.GetGradePoint(score);
 
-        Assert.Equal((decimal)expectedGradePoint, gradePoint);
+        Assert.Equal(expectedGradePoint, gradePoint);
     }
+
+    public static TheoryData<decimal, decimal> OfficialScaleCases => new()
+    {
+        { 100m, 4.00m },
+        { 99m, 4.00m },
+        { 98m, 3.99m },
+        { 93m, 3.91m },
+        { 92m, 3.88m },
+        { 89.5m, 3.79m },
+        { 73m, 2.63m },
+        { 71.5m, 2.48m },
+        { 60m, 1.00m },
+        { 59.9m, 0.00m },
+        { 59m, 0.00m },
+    };
 
     [Fact]
     public void Rules_ExposeOfficialFourColumnLabels()
