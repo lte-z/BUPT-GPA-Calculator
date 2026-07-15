@@ -184,6 +184,8 @@ public partial class MainWindow
             return;
         }
 
+        if (!await ConfirmSaveAsync()) return;
+
         var student = await ShowStudentDialogAsync();
         if (student is null) return;
 
