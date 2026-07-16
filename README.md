@@ -2,6 +2,12 @@
 
 BUPT GPA Calculator 是一个面向北京邮电大学学生的本地成绩管理与 GPA 计算器。它使用单个 SQLite 成绩档案保存多个学生的数据，支持手动录入、从教务系统成绩表复制导入、按全部/学年/学期统计，以及完整展示 GPA 计算规则。
 
+<div align="center">
+
+<img src="https://github.com/user-attachments/assets/48edfd23-1c4d-4f69-bd04-d6a1fc6c6c8a" alt="BUPT GPA Calculator screenshot" width="860">
+
+</div>
+
 ## 设计原则
 
 - **本地优先**：不登录教务系统，不保存账号、密码、Cookie，也不上传成绩数据。
